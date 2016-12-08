@@ -25,14 +25,14 @@ def warn(msg):
 
 
 def err(msg):
-    _logger.error(msg)
+    _logger.error("ERROR: " + msg)
 
 
 def exception(msg):
     _logger.exception(msg)
 
 # Logging
-#////////////////////////////////////////////////
+# ////////////////////////////////////////////////
 
 
 from socket import gethostname
@@ -63,7 +63,7 @@ def copyFile(filePath, destDir=DEST_DIR, host=HOST, port=PORT, user=USER, passwd
 
         fname = basename(filePath)
         fdir = dirname(filePath)
-        if not fdir.endswith("/"): # this is important for scpclient
+        if not fdir.endswith("/"):  # this is important for scpclient
             fdir += "/"
 
         with closing(Read(sshClient.get_transport(), fdir)) as scp:
@@ -72,8 +72,12 @@ def copyFile(filePath, destDir=DEST_DIR, host=HOST, port=PORT, user=USER, passwd
             f = open(localFilePath, "wb")
             f.write(fileCont)
             f.close()
+    except:
+        err("Could not copy {file} from {host}".format(file=filePath, host=host))
+        raise
     finally:
         sshClient.close()
+
 
 def main():
     copyFile('/home/zakhar/test_email.txt')
