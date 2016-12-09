@@ -31,6 +31,7 @@ def main():
     left = (mainWnd.winfo_screenwidth() - MAIN_WND_W) / 2
     top = (mainWnd.winfo_screenheight() - MAIN_WND_H) / 2
     mainWnd.geometry('{w}x{h}+{left}+{top}'.format(w=MAIN_WND_W, h=MAIN_WND_H, left=left, top=top))
+    mainWnd.iconbitmap('favicon.ico')
     mainWnd.mainloop()
 
     info("DONE")

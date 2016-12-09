@@ -6,7 +6,7 @@ block_cipher = None
 a = Analysis(['..\\src\\diagnost.py'],
              pathex=['D:\\Projects\\RailRadarDiagnostics\\tools'],
              binaries=None,
-             datas=None,
+             datas=[ ('../src/favicon.ico', '.') ],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False , icon='..\\src\\favicon.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
