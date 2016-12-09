@@ -4,6 +4,7 @@
 import logging
 from socket import gethostname
 from os.path import dirname, basename, join
+from Tkinter import Tk
 import paramiko
 from contextlib import closing
 import scpclient
@@ -16,11 +17,22 @@ PORT = 2022 if isDebug else 22
 USER = 'zakhar' if isDebug else 'user'
 PASSWD = 'Ubuntu5' if isDebug else 'pass'
 
+MAIN_WND_W = 640
+MAIN_WND_H = 480
 
 def main():
     patch_crypto_be_discovery()
-    text = readFile('/home/zakhar/test_email.txt')
-    log(text)
+
+    # text = readFile('/home/zakhar/test_email.txt')
+    # log(text)
+
+    mainWnd = Tk()
+    mainWnd.title("Диагностика")
+    left = (mainWnd.winfo_screenwidth() - MAIN_WND_W) / 2
+    top = (mainWnd.winfo_screenheight() - MAIN_WND_H) / 2
+    mainWnd.geometry('{w}x{h}+{left}+{top}'.format(w=MAIN_WND_W, h=MAIN_WND_H, left=left, top=top))
+    mainWnd.mainloop()
+
     info("DONE")
 
 def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
