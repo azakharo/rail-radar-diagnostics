@@ -4,7 +4,8 @@
 import logging
 from socket import gethostname
 from os.path import dirname, basename, join
-from Tkinter import Tk, Frame, Label, StringVar, Button
+from datetime import datetime
+from Tkinter import Tk, Frame, Label, StringVar, Button, Text, Scrollbar
 import paramiko
 from contextlib import closing
 import scpclient
@@ -85,13 +86,25 @@ def main():
         global isRunning
         isRunning = not isRunning
         startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isRunning else BTN_TEXT__START_DIAGNOST)
+        # Increase param 2
+        val = float(param2StrVar.get())
+        val += 1
+        param2StrVar.set(str(val))
+        # Write log msg
+        dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
+        logMsg = "{dt} - {msg}\n".format(dt=dt, msg="параметр 2 был увеличен на 1")
+        logWidget.insert('1.0', logMsg)
     startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked, font=PARAM_FONT_SIZE)
     buttonFrame.grid_columnconfigure(0, weight=1)
     startStopBtn.grid(row=0, column=0, sticky="ne")
 
     # Log section
-    logFrame = Frame(mainWnd, width=640, height=240, bg='black')
+    logFrame = Frame(mainWnd, width=640, height=240, bg='grey', padx=10, pady=10)
     logFrame.grid(row=1, column=0, columnspan=3, sticky="ewns")
+    logFrame.grid_rowconfigure(0, weight=1)
+    logFrame.grid_columnconfigure(0, weight=1)
+    logWidget = Text(logFrame, bg='white', width=7, height=13)
+    logWidget.grid(row=0, column=0, sticky="nesw")
 
     # Create layout
     #################################################################
