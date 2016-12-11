@@ -51,7 +51,7 @@ def main():
     mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
 
     # Param section
-    paramFrame = Frame(mainWnd, width=213.33, height=240)
+    paramFrame = Frame(mainWnd, width=MAIN_WND_W / 3, height=MAIN_WND_H / 2)
     paramFrame.grid(row=0, column=0, sticky="ewns", padx=10, pady=10)
     paramFrame.grid_rowconfigure(0, weight=0)
     paramFrame.grid_rowconfigure(1, weight=0)
@@ -73,11 +73,11 @@ def main():
     param2Val.grid(row=1, column=1, sticky="nw")
 
     # Custom widgets section
-    widgetFrame = Frame(mainWnd, width=213.33, height=240)
+    widgetFrame = Frame(mainWnd, width=MAIN_WND_W / 3, height=MAIN_WND_H / 2)
     widgetFrame.grid(row=0, column=1, sticky="ewns")
 
     # Buttons section
-    buttonFrame = Frame(mainWnd, width=213.33, height=240, padx=10, pady=10)
+    buttonFrame = Frame(mainWnd, width=MAIN_WND_W / 3, height=MAIN_WND_H / 2, padx=10, pady=10)
     buttonFrame.grid(row=0, column=2, sticky="ewns")
     # StartStop button
     startStopBtnText = StringVar()
@@ -99,7 +99,7 @@ def main():
     startStopBtn.grid(row=0, column=0, sticky="ne")
 
     # Log section
-    logFrame = Frame(mainWnd, width=640, height=240, bg='grey', padx=10, pady=10)
+    logFrame = Frame(mainWnd, width=MAIN_WND_W, height=MAIN_WND_H / 2, bg='grey', padx=10, pady=10)
     logFrame.grid(row=1, column=0, columnspan=3, sticky="ewns")
     logFrame.grid_rowconfigure(0, weight=1)
     logFrame.grid_columnconfigure(0, weight=1)
