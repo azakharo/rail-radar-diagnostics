@@ -4,7 +4,7 @@
 import logging
 from socket import gethostname
 from os.path import dirname, basename, join
-from Tkinter import Tk, Frame
+from Tkinter import Tk, Frame, Label, StringVar
 import paramiko
 from contextlib import closing
 import scpclient
@@ -19,6 +19,8 @@ PASSWD = 'Ubuntu5' if isDebug else 'pass'
 
 MAIN_WND_W = 640
 MAIN_WND_H = 480
+
+PARAM_FONT_SIZE = (None, 13)
 
 def main():
     patch_crypto_be_discovery()
@@ -37,21 +39,44 @@ def main():
     #################################################################
     # Create layout
 
+    mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
+    mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
+    mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
+
     # Param section
-    paramFrame = Frame(mainWnd, width=213.33, height=240, bg='blue')
-    paramFrame.grid(row=0, column=0)
+    paramFrame = Frame(mainWnd, width=213.33, height=240)
+    paramFrame.grid(row=0, column=0, sticky="ewns", padx=10, pady=10)
+    paramFrame.grid_rowconfigure(0, weight=0)
+    paramFrame.grid_rowconfigure(1, weight=0)
+    paramFrame.grid_columnconfigure(0, weight=0)
+    paramFrame.grid_columnconfigure(1, weight=0)
+
+    # Param 1
+    param1Label = Label(paramFrame, text="Параметр 1: ", font=PARAM_FONT_SIZE)
+    param1Label.grid(row=0, column=0, sticky="nw")
+    param1StrVar = StringVar()
+    param1StrVar.set(str(1.25))
+    param1Val = Label(paramFrame, textvariable=param1StrVar, font=PARAM_FONT_SIZE)
+    param1Val.grid(row=0, column=1, sticky="nw")
+    # Param 2
+    param2Label = Label(paramFrame, text="Параметр 2: ", font=PARAM_FONT_SIZE)
+    param2Label.grid(row=1, column=0, sticky="nw")
+    param2StrVar = StringVar()
+    param2StrVar.set(str(2.88))
+    param2Val = Label(paramFrame, textvariable=param2StrVar, font=PARAM_FONT_SIZE)
+    param2Val.grid(row=1, column=1, sticky="nw")
 
     # Custom widgets section
     widgetFrame = Frame(mainWnd, width=213.33, height=240, bg='green')
-    widgetFrame.grid(row=0, column=1)
+    widgetFrame.grid(row=0, column=1, sticky="ewns")
 
     # Buttons section
     buttonFrame = Frame(mainWnd, width=213.33, height=240, bg='orange')
-    buttonFrame.grid(row=0, column=2)
+    buttonFrame.grid(row=0, column=2, sticky="ewns")
 
     # Log section
     logFrame = Frame(mainWnd, width=640, height=240, bg='black')
-    logFrame.grid(row=1, column=0, columnspan=3)
+    logFrame.grid(row=1, column=0, columnspan=3, sticky="ewns")
 
     # Create layout
     #################################################################
