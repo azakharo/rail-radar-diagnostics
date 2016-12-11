@@ -72,7 +72,7 @@ def main():
     param2Val.grid(row=1, column=1, sticky="nw")
 
     # Custom widgets section
-    widgetFrame = Frame(mainWnd, width=213.33, height=240, bg='green')
+    widgetFrame = Frame(mainWnd, width=213.33, height=240)
     widgetFrame.grid(row=0, column=1, sticky="ewns")
 
     # Buttons section
