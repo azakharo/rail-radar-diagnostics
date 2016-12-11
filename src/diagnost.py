@@ -4,7 +4,7 @@
 import logging
 from socket import gethostname
 from os.path import dirname, basename, join
-from Tkinter import Tk
+from Tkinter import Tk, Frame
 import paramiko
 from contextlib import closing
 import scpclient
@@ -28,10 +28,34 @@ def main():
 
     mainWnd = Tk()
     mainWnd.title("Диагностика")
+    mainWnd.resizable(width=False, height=False)
     left = (mainWnd.winfo_screenwidth() - MAIN_WND_W) / 2
     top = (mainWnd.winfo_screenheight() - MAIN_WND_H) / 2
     mainWnd.geometry('{w}x{h}+{left}+{top}'.format(w=MAIN_WND_W, h=MAIN_WND_H, left=left, top=top))
     mainWnd.iconbitmap('favicon.ico')
+
+    #################################################################
+    # Create layout
+
+    # Param section
+    paramFrame = Frame(mainWnd, width=213.33, height=240, bg='blue')
+    paramFrame.grid(row=0, column=0)
+
+    # Custom widgets section
+    widgetFrame = Frame(mainWnd, width=213.33, height=240, bg='green')
+    widgetFrame.grid(row=0, column=1)
+
+    # Buttons section
+    buttonFrame = Frame(mainWnd, width=213.33, height=240, bg='orange')
+    buttonFrame.grid(row=0, column=2)
+
+    # Log section
+    logFrame = Frame(mainWnd, width=640, height=240, bg='black')
+    logFrame.grid(row=1, column=0, columnspan=3)
+
+    # Create layout
+    #################################################################
+
     mainWnd.mainloop()
 
     info("DONE")
