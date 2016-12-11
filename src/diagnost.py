@@ -4,7 +4,7 @@
 import logging
 from socket import gethostname
 from os.path import dirname, basename, join
-from Tkinter import Tk, Frame, Label, StringVar
+from Tkinter import Tk, Frame, Label, StringVar, Button
 import paramiko
 from contextlib import closing
 import scpclient
@@ -21,6 +21,12 @@ MAIN_WND_W = 640
 MAIN_WND_H = 480
 
 PARAM_FONT_SIZE = (None, 13)
+
+# StartStop button
+isRunning = False
+BTN_TEXT__START_DIAGNOST = "Запустить"
+BTN_TEXT__STOP_DIAGNOST = "Остановить"
+
 
 def main():
     patch_crypto_be_discovery()
@@ -50,7 +56,6 @@ def main():
     paramFrame.grid_rowconfigure(1, weight=0)
     paramFrame.grid_columnconfigure(0, weight=0)
     paramFrame.grid_columnconfigure(1, weight=0)
-
     # Param 1
     param1Label = Label(paramFrame, text="Параметр 1: ", font=PARAM_FONT_SIZE)
     param1Label.grid(row=0, column=0, sticky="nw")
@@ -71,8 +76,18 @@ def main():
     widgetFrame.grid(row=0, column=1, sticky="ewns")
 
     # Buttons section
-    buttonFrame = Frame(mainWnd, width=213.33, height=240, bg='orange')
+    buttonFrame = Frame(mainWnd, width=213.33, height=240, padx=10, pady=10)
     buttonFrame.grid(row=0, column=2, sticky="ewns")
+    # StartStop button
+    startStopBtnText = StringVar()
+    startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
+    def startStopBtnClicked():
+        global isRunning
+        isRunning = not isRunning
+        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isRunning else BTN_TEXT__START_DIAGNOST)
+    startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked, font=PARAM_FONT_SIZE)
+    buttonFrame.grid_columnconfigure(0, weight=1)
+    startStopBtn.grid(row=0, column=0, sticky="ne")
 
     # Log section
     logFrame = Frame(mainWnd, width=640, height=240, bg='black')
@@ -84,6 +99,7 @@ def main():
     mainWnd.mainloop()
 
     info("DONE")
+
 
 def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
     sshClient = None
