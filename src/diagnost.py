@@ -8,7 +8,6 @@ from threading import Thread
 from Queue import Queue
 from time import sleep
 from contextlib import closing
-import argparse
 from glob import glob
 from os import getcwd
 import paramiko
@@ -39,19 +38,13 @@ def main():
     # Stuff necessary to build the exe
     patch_crypto_be_discovery()
 
-    # Parse cmd line args
-    args = parseCmdLine()
-
     global appConfig
-    if args.cfgFilePath: # if specified on the cmd line
-        appConfig = AppConfig.readConfig(args.cfgFilePath)
+    # Try to find any config in the cur work dir
+    configFiles = glob(join(getcwd(), "*.cfg"))
+    if configFiles: # if found
+        appConfig = AppConfig.readConfig(configFiles[0])
     else:
-        # Try to find any config in the cur work dir
-        configFiles = glob(join(getcwd(), "*.cfg"))
-        if configFiles: # if found
-            appConfig = AppConfig.readConfig(configFiles[0])
-        else:
-            appConfig = AppConfig()
+        appConfig = AppConfig()
 
     # Create main window
     global mainWnd
@@ -276,14 +269,6 @@ def printLogMsg(msg):
     logWidget.configure(state="normal")
     logWidget.insert('1.0', logMsg)
     logWidget.configure(state="disabled")
-
-
-def parseCmdLine():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--cfg", dest='cfgFilePath', metavar='filename',
-                        help='Specify configuration file to be used. If not specified, the program will search for any *.cfg file in the current working directory.')
-    args = parser.parse_args()
-    return args
 
 
 def patch_crypto_be_discovery():
