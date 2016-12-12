@@ -96,7 +96,9 @@ def main():
         # Write log msg
         dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
         logMsg = "{dt} - {msg}\n".format(dt=dt, msg="параметр 2 был увеличен на 1")
+        logWidget.configure(state="normal")
         logWidget.insert('1.0', logMsg)
+        logWidget.configure(state="disabled")
     startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
                           font=PARAM_FONT_SIZE, width=12)
     buttonFrame.grid_columnconfigure(0, weight=1)
@@ -108,6 +110,7 @@ def main():
     logFrame.grid_rowconfigure(0, weight=1)
     logFrame.grid_columnconfigure(0, weight=1)
     logWidget = Text(logFrame, bg='white', width=40, height=13)
+    logWidget.configure(state="disabled")
     logWidget.grid(row=0, column=0, sticky="nesw")
     # Vert Scrollbar
     logScrollBar = Scrollbar(logFrame, command=logWidget.yview)
