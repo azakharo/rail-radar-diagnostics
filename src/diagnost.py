@@ -54,13 +54,24 @@ def main():
     # Create layout and widgets
     createLayoutAndWidgets(mainWnd)
 
+    # Gracefully stop mon on exit
+    mainWnd.wm_protocol("WM_DELETE_WINDOW", onExit)
+
     # Start GUI event loop
     mainWnd.mainloop()
 
     info("DONE")
 
 
+def onExit():
+    stopMonitoring()
+    mainWnd.destroy()
+
+
 def startMonitoring():
+    global isMonRunning
+    isMonRunning = True
+
     # Create and run the reader thread
     readerThread = Thread(target=readerThreadFunc)
     readerThread.start()
@@ -69,6 +80,9 @@ def startMonitoring():
     guiPeriodicCall()
 
 def stopMonitoring():
+    global isMonRunning
+    isMonRunning = False
+
     global readerThread
     if readerThread:
         readerThread = None
@@ -226,13 +240,11 @@ def createLayoutAndWidgets(mainWnd):
     startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
 
     def startStopBtnClicked():
-        global isMonRunning
-        isMonRunning = not isMonRunning
-        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isMonRunning else BTN_TEXT__START_DIAGNOST)
-        if isMonRunning:
+        if not isMonRunning:
             startMonitoring()
         else:
             stopMonitoring()
+        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isMonRunning else BTN_TEXT__START_DIAGNOST)
 
     startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
                           font=PARAM_FONT_SIZE, width=12)
