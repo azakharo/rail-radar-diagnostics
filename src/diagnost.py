@@ -6,8 +6,11 @@ from socket import gethostname
 from os.path import dirname, basename, join
 from datetime import datetime
 from Tkinter import Tk, Frame, Label, StringVar, Button, Text, Scrollbar
-import paramiko
+from threading import Thread
+from Queue import Queue
+from time import sleep
 from contextlib import closing
+import paramiko
 import scpclient
 
 
@@ -24,17 +27,22 @@ MAIN_WND_H = 480
 PARAM_FONT_SIZE = (None, 13)
 
 # StartStop button
-isRunning = False
+isMonRunning = False
 BTN_TEXT__START_DIAGNOST = "Запустить"
 BTN_TEXT__STOP_DIAGNOST  = "Остановить"
 
+readerThread = None
+eventQueue = Queue()
+mainWnd = None
+param2StrVar = None
+logWidget = None
 
 def main():
+    # Stuff necessary to build the exe
     patch_crypto_be_discovery()
 
-    # text = readFile('/home/zakhar/test_email.txt')
-    # log(text)
-
+    # Create main window
+    global mainWnd
     mainWnd = Tk()
     mainWnd.title("Диагностика")
     mainWnd.resizable(width=False, height=False)
@@ -43,11 +51,89 @@ def main():
     mainWnd.geometry('{w}x{h}+{left}+{top}'.format(w=MAIN_WND_W, h=MAIN_WND_H, left=left, top=top))
     mainWnd.iconbitmap('favicon.ico')
 
-    createWidgets(mainWnd)
+    # Create layout and widgets
+    createLayoutAndWidgets(mainWnd)
 
+    # Start GUI event loop
     mainWnd.mainloop()
 
     info("DONE")
+
+
+def startMonitoring():
+    # Create and run the reader thread
+    readerThread = Thread(target=readerThreadFunc)
+    readerThread.start()
+
+    # Start GUI periodic checks of the queue and msg processing
+    guiPeriodicCall()
+
+def stopMonitoring():
+    global readerThread
+    if readerThread:
+        readerThread = None
+
+
+def readerThreadFunc():
+    # Open connection
+    sshClient = None
+    try:
+        sshClient = paramiko.SSHClient()
+        sshClient.load_system_host_keys()
+        sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
+
+        sshClient.connect(HOST, port=PORT, username=USER, password=PASSWD)
+    except:
+        err("Could not connect to {host}:{port}".format(host=HOST, port=PORT))
+        raise
+
+    # Periodically read file and pass data to the UI
+    while isMonRunning:
+        val = float(readFileUsingConnection(sshClient, '/home/zakhar/diagnost.txt'))
+        eventQueue.put({
+            'name': 'param2',
+            'value': val
+        })
+        # log("put val in the queue {}".format(val))
+        sleep(1)
+
+    # Close the connection
+    sshClient.close()
+
+
+def guiPeriodicCall():
+    """ Check every 200 ms if there is something new in the queue. """
+    if isMonRunning:
+        mainWnd.after(200, guiPeriodicCall)
+    processMsgsFromReader()
+
+
+def processMsgsFromReader():
+    """ Handle all messages currently in the queue, if any. """
+    while eventQueue.qsize():
+        try:
+            msg = eventQueue.get(0)
+            if msg['name'] == 'param2':
+                prevVal = getParam2()
+                param2 = msg['value']
+                if param2 != prevVal:
+                    # Update param2 value in the UI
+                    setParam2(param2)
+                    # Print log msg into the log widget
+                    printLogMsg("новое значение параметра 2: {}".format(param2))
+        except Queue.Empty:
+            pass
+
+
+def readFileUsingConnection(sshClient, filePath):
+    fileCont = None
+    fname = basename(filePath)
+    fdir = dirname(filePath)
+    if not fdir.endswith("/"):  # this is important for scpclient
+        fdir += "/"
+    with closing(scpclient.Read(sshClient.get_transport(), fdir)) as scp:
+        fileCont = scp.receive(fname)
+    return fileCont
 
 
 def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
@@ -60,15 +146,9 @@ def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
 
         sshClient.connect(HOST, port=PORT, username=USER, password=PASSWD)
 
-        fname = basename(filePath)
-        fdir = dirname(filePath)
-        if not fdir.endswith("/"):  # this is important for scpclient
-            fdir += "/"
-
-        with closing(scpclient.Read(sshClient.get_transport(), fdir)) as scp:
-            fileCont = scp.receive(fname)
+        fileCont = readFileUsingConnection(sshClient, filePath)
     except:
-        err("Could not read {file} from {host}".format(file=filePath, host=host))
+        err("Could not read {file} from {host}:{port}".format(file=filePath, host=host, port=port))
         raise
     finally:
         sshClient.close()
@@ -107,7 +187,7 @@ def exception(msg):
 # ////////////////////////////////////////////////
 
 
-def createWidgets(mainWnd):
+def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
     mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
     mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
@@ -130,8 +210,9 @@ def createWidgets(mainWnd):
     # Param 2
     param2Label = Label(paramFrame, text="Параметр 2: ", font=PARAM_FONT_SIZE)
     param2Label.grid(row=1, column=0, sticky="nw")
+    global param2StrVar
     param2StrVar = StringVar()
-    param2StrVar.set(str(2.88))
+    setParam2(0)
     param2Val = Label(paramFrame, textvariable=param2StrVar, font=PARAM_FONT_SIZE)
     param2Val.grid(row=1, column=1, sticky="nw")
     # Custom widgets section
@@ -145,19 +226,13 @@ def createWidgets(mainWnd):
     startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
 
     def startStopBtnClicked():
-        global isRunning
-        isRunning = not isRunning
-        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isRunning else BTN_TEXT__START_DIAGNOST)
-        # Increase param 2
-        val = float(param2StrVar.get())
-        val += 1
-        param2StrVar.set(str(val))
-        # Write log msg
-        dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
-        logMsg = "{dt} - {msg}\n".format(dt=dt, msg="параметр 2 был увеличен на 1")
-        logWidget.configure(state="normal")
-        logWidget.insert('1.0', logMsg)
-        logWidget.configure(state="disabled")
+        global isMonRunning
+        isMonRunning = not isMonRunning
+        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isMonRunning else BTN_TEXT__START_DIAGNOST)
+        if isMonRunning:
+            startMonitoring()
+        else:
+            stopMonitoring()
 
     startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
                           font=PARAM_FONT_SIZE, width=12)
@@ -168,6 +243,7 @@ def createWidgets(mainWnd):
     logFrame.grid(row=1, column=0, columnspan=3, sticky="ewns")
     logFrame.grid_rowconfigure(0, weight=1)
     logFrame.grid_columnconfigure(0, weight=1)
+    global logWidget
     logWidget = Text(logFrame, bg='white', width=40, height=13)
     logWidget.configure(state="disabled")
     logWidget.grid(row=0, column=0, sticky="nesw")
@@ -175,6 +251,24 @@ def createWidgets(mainWnd):
     logScrollBar = Scrollbar(logFrame, command=logWidget.yview)
     logScrollBar.grid(row=0, column=1, sticky='nsew')
     logWidget['yscrollcommand'] = logScrollBar.set
+
+
+def getParam2():
+    val = None
+    if param2StrVar:
+        val = float(param2StrVar.get())
+    return val
+
+def setParam2(val):
+    if param2StrVar:
+        param2StrVar.set(str(val))
+
+def printLogMsg(msg):
+    dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
+    logMsg = "{dt} - {msg}\n".format(dt=dt, msg=msg)
+    logWidget.configure(state="normal")
+    logWidget.insert('1.0', logMsg)
+    logWidget.configure(state="disabled")
 
 
 def patch_crypto_be_discovery():
