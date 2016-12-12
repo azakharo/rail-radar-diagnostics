@@ -26,7 +26,7 @@ PARAM_FONT_SIZE = (None, 13)
 # StartStop button
 isRunning = False
 BTN_TEXT__START_DIAGNOST = "Запустить"
-BTN_TEXT__STOP_DIAGNOST = "Остановить"
+BTN_TEXT__STOP_DIAGNOST  = "Остановить"
 
 
 def main():
@@ -97,7 +97,8 @@ def main():
         dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
         logMsg = "{dt} - {msg}\n".format(dt=dt, msg="параметр 2 был увеличен на 1")
         logWidget.insert('1.0', logMsg)
-    startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked, font=PARAM_FONT_SIZE)
+    startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
+                          font=PARAM_FONT_SIZE, width=12)
     buttonFrame.grid_columnconfigure(0, weight=1)
     startStopBtn.grid(row=0, column=0, sticky="ne")
 
