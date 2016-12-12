@@ -1,8 +1,6 @@
 #! python2
 # -*- coding: utf-8 -*-
 
-import logging
-from socket import gethostname
 from os.path import dirname, basename, join
 from datetime import datetime
 from Tkinter import Tk, Frame, Label, StringVar, Button, Text, Scrollbar
@@ -10,16 +8,14 @@ from threading import Thread
 from Queue import Queue
 from time import sleep
 from contextlib import closing
+import argparse
+from glob import glob
+from os import getcwd
 import paramiko
 import scpclient
+from mylogging import log, info, err
+from appConfig import AppConfig
 
-
-isDebug = gethostname() == 'zakhar-mobl'
-
-HOST = '127.0.0.1' if isDebug else 'unknown-host'
-PORT = 2022 if isDebug else 22
-USER = 'zakhar' if isDebug else 'user'
-PASSWD = 'Ubuntu5' if isDebug else 'pass'
 
 MAIN_WND_W = 640
 MAIN_WND_H = 480
@@ -31,6 +27,7 @@ isMonRunning = False
 BTN_TEXT__START_DIAGNOST = "Запустить"
 BTN_TEXT__STOP_DIAGNOST  = "Остановить"
 
+appConfig = None
 readerThread = None
 eventQueue = Queue()
 mainWnd = None
@@ -41,6 +38,20 @@ startStopBtnText = None
 def main():
     # Stuff necessary to build the exe
     patch_crypto_be_discovery()
+
+    # Parse cmd line args
+    args = parseCmdLine()
+
+    global appConfig
+    if args.cfgFilePath: # if specified on the cmd line
+        appConfig = AppConfig.readConfig(args.cfgFilePath)
+    else:
+        # Try to find any config in the cur work dir
+        configFiles = glob(join(getcwd(), "*.cfg"))
+        if configFiles: # if found
+            appConfig = AppConfig.readConfig(configFiles[0])
+        else:
+            appConfig = AppConfig()
 
     # Create main window
     global mainWnd
@@ -103,9 +114,9 @@ def readerThreadFunc():
         sshClient.load_system_host_keys()
         sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
 
-        sshClient.connect(HOST, port=PORT, username=USER, password=PASSWD)
+        sshClient.connect(appConfig.host, port=appConfig.port, username=appConfig.user, password=appConfig.passwd)
     except:
-        errMsg = "Could not connect to {host}:{port}".format(host=HOST, port=PORT)
+        errMsg = "Could not connect to {host}:{port}".format(host=appConfig.host, port=appConfig.port)
         err(errMsg)
         eventQueue.put({
             'name': 'error',
@@ -166,7 +177,7 @@ def readFileUsingConnection(sshClient, filePath):
     return fileCont
 
 
-def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
+def readFile(filePath, host, port, user, passwd):
     sshClient = None
     fileCont = None
     try:
@@ -174,7 +185,7 @@ def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
         sshClient.load_system_host_keys()
         sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
 
-        sshClient.connect(HOST, port=PORT, username=USER, password=PASSWD)
+        sshClient.connect(host, port=port, username=user, password=passwd)
 
         fileCont = readFileUsingConnection(sshClient, filePath)
     except:
@@ -183,38 +194,6 @@ def readFile(filePath, host=HOST, port=PORT, user=USER, passwd=PASSWD):
     finally:
         sshClient.close()
     return fileCont
-
-
-# ////////////////////////////////////////////////
-# Logging
-
-FORMAT = '%(message)s'
-logging.basicConfig(format=FORMAT)
-_logger = logging.getLogger()
-_logger.setLevel(logging.DEBUG)
-
-
-def log(msg):
-    _logger.debug(msg)
-
-
-def info(msg):
-    _logger.info(msg)
-
-
-def warn(msg):
-    _logger.warning(msg)
-
-
-def err(msg):
-    _logger.error("ERROR: " + msg)
-
-
-def exception(msg):
-    _logger.exception(msg)
-
-# Logging
-# ////////////////////////////////////////////////
 
 
 def createLayoutAndWidgets(mainWnd):
@@ -297,6 +276,14 @@ def printLogMsg(msg):
     logWidget.configure(state="normal")
     logWidget.insert('1.0', logMsg)
     logWidget.configure(state="disabled")
+
+
+def parseCmdLine():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--cfg", dest='cfgFilePath', metavar='filename',
+                        help='Specify configuration file to be used. If not specified, the program will search for any *.cfg file in the current working directory.')
+    args = parser.parse_args()
+    return args
 
 
 def patch_crypto_be_discovery():
