@@ -36,6 +36,7 @@ eventQueue = Queue()
 mainWnd = None
 param2StrVar = None
 logWidget = None
+startStopBtnText = None
 
 def main():
     # Stuff necessary to build the exe
@@ -72,6 +73,9 @@ def startMonitoring():
     global isMonRunning
     isMonRunning = True
 
+    global startStopBtnText
+    startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST)
+
     # Create and run the reader thread
     readerThread = Thread(target=readerThreadFunc)
     readerThread.start()
@@ -82,6 +86,9 @@ def startMonitoring():
 def stopMonitoring():
     global isMonRunning
     isMonRunning = False
+
+    global startStopBtnText
+    startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
 
     global readerThread
     if readerThread:
@@ -98,8 +105,13 @@ def readerThreadFunc():
 
         sshClient.connect(HOST, port=PORT, username=USER, password=PASSWD)
     except:
-        err("Could not connect to {host}:{port}".format(host=HOST, port=PORT))
-        raise
+        errMsg = "Could not connect to {host}:{port}".format(host=HOST, port=PORT)
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
 
     # Periodically read file and pass data to the UI
     while isMonRunning:
@@ -127,14 +139,18 @@ def processMsgsFromReader():
     while eventQueue.qsize():
         try:
             msg = eventQueue.get(0)
-            if msg['name'] == 'param2':
+            msgName = msg['name']
+            msgVal = msg['value']
+            if msgName == 'param2':
                 prevVal = getParam2()
-                param2 = msg['value']
-                if param2 != prevVal:
+                if msgVal != prevVal:
                     # Update param2 value in the UI
-                    setParam2(param2)
+                    setParam2(msgVal)
                     # Print log msg into the log widget
-                    printLogMsg("новое значение параметра 2: {}".format(param2))
+                    printLogMsg("новое значение параметра 2: {}".format(msgVal))
+            elif msgName == 'error':
+                printLogMsg(msgVal)
+                stopMonitoring()
         except Queue.Empty:
             pass
 
@@ -236,6 +252,7 @@ def createLayoutAndWidgets(mainWnd):
     buttonFrame = Frame(mainWnd, width=MAIN_WND_W / 3, padx=10, pady=10)
     buttonFrame.grid(row=0, column=2, sticky="ewns")
     # StartStop button
+    global startStopBtnText
     startStopBtnText = StringVar()
     startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
 
@@ -244,7 +261,6 @@ def createLayoutAndWidgets(mainWnd):
             startMonitoring()
         else:
             stopMonitoring()
-        startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST if isMonRunning else BTN_TEXT__START_DIAGNOST)
 
     startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
                           font=PARAM_FONT_SIZE, width=12)
