@@ -6,4 +6,4 @@ SET PKG_NAME=rail_radar_diagnost
 rmdir /S /Q %OUT_DIR%\build
 rmdir /S /Q %OUT_DIR%\dist
 
-%PYT_PATH%\Scripts\pyinstaller.exe --windowed --distpath %OUT_DIR%\dist --workpath %OUT_DIR%\build -y --clean --icon=..\src\favicon.ico ..\src\diagnost.py
+%PYT_PATH%\Scripts\pyinstaller.exe --onefile --windowed --distpath %OUT_DIR%\dist --workpath %OUT_DIR%\build -y --clean --icon=..\src\favicon.ico ..\src\diagnost.py
