@@ -52,7 +52,7 @@ Section "MainSection" SEC01
   CreateShortCut "$SMPROGRAMS\Rail Radar Diagnost\Rail Radar Diagnost.lnk" "$INSTDIR\diagnost.exe"
   CreateShortCut "$DESKTOP\Rail Radar Diagnost.lnk" "$INSTDIR\diagnost.exe"
   File "..\.build\dist\favicon.ico"
-  File "..\.build\dist\my-local.cfg"
+  File "..\.build\dist\diagnost.cfg"
 SectionEnd
 
 Section -AdditionalIcons
@@ -86,7 +86,7 @@ FunctionEnd
 Section Uninstall
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
   Delete "$INSTDIR\uninst.exe"
-  Delete "$INSTDIR\my-local.cfg"
+  Delete "$INSTDIR\diagnost.cfg"
   Delete "$INSTDIR\favicon.ico"
   Delete "$INSTDIR\diagnost.exe"
 
