@@ -108,8 +108,9 @@ def readerThreadFunc():
         sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
 
         sshClient.connect(appConfig.host, port=appConfig.port, username=appConfig.user, password=appConfig.passwd)
-    except:
-        errMsg = "Could not connect to {host}:{port}".format(host=appConfig.host, port=appConfig.port)
+    except Exception, e:
+        errMsg = "Could not connect to {host}:{port}\n{exc}".format(
+            host=appConfig.host, port=appConfig.port, exc=str(e))
         err(errMsg)
         eventQueue.put({
             'name': 'error',
@@ -119,7 +120,22 @@ def readerThreadFunc():
 
     # Periodically read file and pass data to the UI
     while isMonRunning:
-        val = float(readFileUsingConnection(sshClient, appConfig.statePath))
+        val = None
+
+        try:
+            val = float(readFileUsingConnection(sshClient, appConfig.statePath))
+        except Exception, e:
+            errMsg = "Could not read {file} from {host}:{port}\n{exc}".format(
+                file=appConfig.statePath, host=appConfig.host, port=appConfig.port, exc=str(e))
+            err(errMsg)
+            eventQueue.put({
+                'name': 'error',
+                'value': errMsg
+            })
+            # Close the connection
+            sshClient.close()
+            return
+
         eventQueue.put({
             'name': 'param2',
             'value': val
