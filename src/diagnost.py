@@ -119,7 +119,7 @@ def readerThreadFunc():
 
     # Periodically read file and pass data to the UI
     while isMonRunning:
-        val = float(readFileUsingConnection(sshClient, '/home/zakhar/diagnost.txt'))
+        val = float(readFileUsingConnection(sshClient, appConfig.statePath))
         eventQueue.put({
             'name': 'param2',
             'value': val

@@ -12,12 +12,14 @@ class AppConfig(object):
     DEF_PORT = 22
     DEF_USER = 'user'
     DEF_PASS = '123456'
+    DEF_STATE_PATH = '~/vbu.state.txt'
 
-    def __init__(self, host=DEF_HOST, port=DEF_PORT, user=DEF_USER, passwd=DEF_PASS):
+    def __init__(self, host=DEF_HOST, port=DEF_PORT, user=DEF_USER, passwd=DEF_PASS, statePath=DEF_STATE_PATH):
         self.host = host
         self.port = port
         self.user = user
         self.passwd = passwd
+        self.statePath = statePath
 
     @staticmethod
     def safeGet(config, section, option, defVal):
@@ -65,9 +67,10 @@ class AppConfig(object):
                 port = cls.safeGetInt(config, sectionName,  'port',     22)
                 user = cls.safeGet(config, sectionName,     'user',     '')
                 passwd = cls.safeGet(config, sectionName,   'passwd',   '')
+                statePath = cls.safeGet(config, sectionName,'statePath','')
 
                 # Create config
-                appConf = AppConfig(host, port, user, passwd)
+                appConf = AppConfig(host, port, user, passwd, statePath)
             else:
                 warn("The configuration file doesn't have required section '{}'".format(sectionName))
         else:
