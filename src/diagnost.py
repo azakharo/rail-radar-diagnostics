@@ -271,7 +271,7 @@ class LimitedParamWidgetDesc(ParamWidgetDesc):
     max = attr.ib()
 
     def isInBoundaries(self):
-        return self.value >= self.min and self <= self.max
+        return self.value >= self.min and self.value <= self.max
 
 def createParamWidgetDescs(vbuState):
     infos = []
@@ -319,6 +319,12 @@ def createParamWidgets(widgetDescriptions):
             valueStr = v
         value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
         value.grid(row=descInd, column=1, sticky="nw")
+        if isinstance(desc, LimitedParamWidgetDesc):
+            if desc.isInBoundaries():
+                fg = 'lime green'
+            else:
+                fg = 'firebrick'
+            value.configure(foreground=fg)
 
 def formatFloat(val):
     return "{:9.6f}".format(val)
