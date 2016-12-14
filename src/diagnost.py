@@ -131,10 +131,13 @@ def readVbuState():
             'value': errMsg
         })
         return
-    log(vbuState)
+    # log(vbuState)
 
     # Pass parsed vbu state to UI
-    pass
+    eventQueue.put({
+        'name': 'vbuState',
+        'value': vbuState
+    })
 
     global isVbuStateReading
     isVbuStateReading = False

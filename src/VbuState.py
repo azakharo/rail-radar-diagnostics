@@ -14,6 +14,25 @@ class VbuState(object):
     frequencies = attr.ib()
 
 
+    #########################
+    # Limits
+
+    SGNL_MIN__MIN = -0.7
+    SGNL_MIN__MAX = -0.2
+
+    SGNL_MEAN__MIN = -0.1
+    SGNL_MEAN__MAX = 0.1
+
+    SGNL_MAX__MIN = 0.2
+    SGNL_MAX__MAX = 0.7
+
+    FREQ_MIN = 0.3
+    FREQ_MAX = 0.75
+
+    # Limits
+    #########################
+
+
 if __name__ == '__main__':
     from datetime import datetime
     from mylogging import log
@@ -22,10 +41,3 @@ if __name__ == '__main__':
     state2 = VbuState(datetime.now(), datetime.now(), 2, 5, 8, [4, 1, 2])
     log(state1)
     log(state1 == state2)
-
-# Для N > 0 вывести:
-#         диапазон времени date_time_start - date_time_end
-#         усредненный минимальный уровень сигнала = (signal_level_min_mean - 2048) / 4095 * 1.8 Вольт (допустимый диапазон  [-0.7; -0.2])
-#         усредненный средний уровень сигнала = (signal_level_mean_mean - 2048) / 4095 * 1.8 В Вольт (допустимый диапазон  [-0.1; +0.1])
-#         усредненный максимальный уровень сигнала = (signal_level_min_mean - 2048) / 4095 * 1.8 В Вольт (допустимый диапазон  [+0.2; +0.7])
-#         Для M=1..N  средний уровень частоты = freqM_mean * 0.7 * 1.e-4 Вольт (допустимый диапазон  [+0.3; +0.75])
