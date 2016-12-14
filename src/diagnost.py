@@ -312,10 +312,11 @@ def createParamWidgets(widgetDescriptions):
         # Create label and value fields and add them to proper frame
         label = Label(paramFrame, text="{}: ".format(desc.label), font=PARAM_FONT_SIZE)
         label.grid(row=descInd, column=0, sticky="nw")
-        if isinstance(desc.value, float):
-            valueStr = formatFloat(desc.value)
+        v = desc.value
+        if isinstance(v, float):
+            valueStr = formatFloat(v)
         else:
-            valueStr = desc.value
+            valueStr = v
         value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
         value.grid(row=descInd, column=1, sticky="nw")
 
