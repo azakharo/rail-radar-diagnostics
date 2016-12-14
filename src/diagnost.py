@@ -312,10 +312,10 @@ def createLayoutAndWidgets(mainWnd):
         else:
             stopMonitoring()
 
-    startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
-                          font=PARAM_FONT_SIZE, width=12)
+    # startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
+    #                       font=PARAM_FONT_SIZE, width=12)
     buttonFrame.grid_columnconfigure(0, weight=1)
-    startStopBtn.grid(row=0, column=0, sticky="ne")
+    # startStopBtn.grid(row=0, column=0, sticky="ne")
     # Log section
     logFrame = Frame(mainWnd, width=MAIN_WND_W, padx=10, pady=10)
     logFrame.grid(row=1, column=0, columnspan=3, sticky="ewns")
