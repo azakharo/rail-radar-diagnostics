@@ -14,6 +14,7 @@ import paramiko
 import scpclient
 from mylogging import log, info, err
 from appConfig import AppConfig
+from vbu_state_parsing import parseVbuStateFile
 
 
 MAIN_WND_W = 640
@@ -111,7 +112,7 @@ def readVbuState():
         vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
                                     appConfig.user, appConfig.passwd)
     except Exception, e:
-        errMsg = "Could not read VBU State file\n{exc}".format(exc=str(e))
+        errMsg = "Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=str(e))
         err(errMsg)
         eventQueue.put({
             'name': 'error',
@@ -120,9 +121,17 @@ def readVbuState():
         return
 
     # Parse vbu state file
-    log("VBU STATE HAS BEEN READ!")
-    log(vbuStateFileCont[-20:])
-    pass
+    try:
+        vbuState = parseVbuStateFile(vbuStateFileCont)
+    except Exception, ex:
+        errMsg = "Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=str(ex))
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
+    log(vbuState)
 
     # Pass parsed vbu state to UI
     pass
