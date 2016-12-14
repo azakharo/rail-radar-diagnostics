@@ -306,7 +306,7 @@ def createParamWidgetDescs(vbuState):
     infos.append(info)
 
     # Signal Mean
-    info = LimitedParamWidgetDesc("Средний уровень сигнала", vbuState.signalMean,
+    info = LimitedParamWidgetDesc("Сред. уровень сигнала", vbuState.signalMean,
                            VbuState.SGNL_MEAN__MIN, VbuState.SGNL_MEAN__MAX)
     infos.append(info)
 
@@ -315,10 +315,11 @@ def createParamWidgetDescs(vbuState):
                            VbuState.SGNL_MAX__MIN, VbuState.SGNL_MAX__MAX)
     infos.append(info)
 
-    # # Frequencies
-    # info = ParamWidgetInfo("Средний уровень частот", vbuState.signalMax,
-    #                        VbuState.SGNL_MAX__MIN, VbuState.SGNL_MAX__MAX)
-    # infos.append(info)
+    # Frequencies
+    for frInd, fr in enumerate(vbuState.frequencies):
+        info = LimitedParamWidgetDesc("Сред. уровень частоты {}".format(frInd + 1), fr,
+                               VbuState.FREQ_MIN, VbuState.FREQ_MAX)
+        infos.append(info)
 
     return infos
 
@@ -332,7 +333,7 @@ def createParamWidgets(widgetDescriptions):
         if isinstance(v, float):
             valueStr = formatFloat(v)
         else:
-            valueStr = v
+            valueStr = str(v)
         value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
         value.grid(row=descInd + firstRowInd, column=1, sticky="ne")
         if isinstance(desc, LimitedParamWidgetDesc):
@@ -385,8 +386,8 @@ def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
     # mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
     # mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
-    mainWnd.grid_rowconfigure(0, weight=1, uniform="fred2")
-    mainWnd.grid_rowconfigure(1, weight=2, uniform="fred2")
+    mainWnd.grid_rowconfigure(0, weight=2, uniform="fred2")
+    mainWnd.grid_rowconfigure(1, weight=1, uniform="fred2")
     # Param section
     global paramFrame
     paramFrame = Frame(mainWnd, width=MAIN_WND_W)
