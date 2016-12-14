@@ -320,11 +320,17 @@ def createParamWidgets(widgetDescriptions):
         value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
         value.grid(row=descInd, column=1, sticky="nw")
         if isinstance(desc, LimitedParamWidgetDesc):
+            # Select value's color
             if desc.isInBoundaries():
                 fg = 'lime green'
             else:
                 fg = 'firebrick'
             value.configure(foreground=fg)
+            # Output the limits
+            limits = Label(paramFrame, text='[{min:5.2f}, {max:5.2f}]'.format(min=desc.min, max=desc.max),
+                           font=PARAM_FONT_SIZE)
+            limits.grid(row=descInd, column=2, sticky="nw")
+
 
 def formatFloat(val):
     return "{:9.6f}".format(val)
