@@ -143,6 +143,10 @@ def readVbuState():
         'value': vbuState
     })
 
+    global isVbuStateReading
+    isVbuStateReading = False
+
+
 # Read Vbu State
 #////////////////////////////////////////////////////////////////////
 
