@@ -10,11 +10,13 @@ from time import sleep
 from contextlib import closing
 from glob import glob
 from os import getcwd
+import attr
 import paramiko
 import scpclient
 from mylogging import log, info, err
 from appConfig import AppConfig
 from vbu_state_parsing import parseVbuStateFile
+from VbuState import VbuState
 
 
 MAIN_WND_W = 640
@@ -24,8 +26,8 @@ PARAM_FONT_SIZE = (None, 13)
 
 # StartStop button
 isMonRunning = False
-BTN_TEXT__START_DIAGNOST = "Запустить"
-BTN_TEXT__STOP_DIAGNOST  = "Остановить"
+# BTN_TEXT__START_DIAGNOST = "Запустить"
+# BTN_TEXT__STOP_DIAGNOST  = "Остановить"
 
 appConfig = None
 readerThread = None
@@ -33,10 +35,12 @@ eventQueue = Queue()
 mainWnd = None
 param2StrVar = None
 logWidget = None
-startStopBtnText = None
+# startStopBtnText = None
 
 vbuReaderThread = None
 isVbuStateReading = False
+
+paramFrame = None
 
 
 def main():
@@ -139,9 +143,6 @@ def readVbuState():
         'value': vbuState
     })
 
-    global isVbuStateReading
-    isVbuStateReading = False
-
 # Read Vbu State
 #////////////////////////////////////////////////////////////////////
 
@@ -150,8 +151,8 @@ def startMonitoring():
     global isMonRunning
     isMonRunning = True
 
-    global startStopBtnText
-    startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST)
+    # global startStopBtnText
+    # startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST)
 
     # Create and run the reader thread
     global readerThread
@@ -165,8 +166,8 @@ def stopMonitoring():
     global isMonRunning
     isMonRunning = False
 
-    global startStopBtnText
-    startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
+    # global startStopBtnText
+    # startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
 
     global readerThread
     if readerThread:
@@ -245,9 +246,77 @@ def processMsgsFromReader():
             elif msgName == 'error':
                 printLogMsg(msgVal)
                 stopMonitoring()
-        except Queue.Empty:
+            elif msgName == 'vbuState':
+                visualizeVbuState(msgVal)
+        except:
             pass
 
+
+def visualizeVbuState(state):
+    descrs = createParamWidgetDescs(state)
+    createParamWidgets(descrs)
+
+@attr.s
+class ParamWidgetDesc(object):
+    label = attr.ib()
+    value = attr.ib()
+
+@attr.s
+class LimitedParamWidgetDesc(ParamWidgetDesc):
+    min = attr.ib()
+    max = attr.ib()
+
+    def isInBoundaries(self):
+        return self.value >= self.min and self <= self.max
+
+def createParamWidgetDescs(vbuState):
+    infos = []
+
+    # Time period
+    DT_FRMT = "%H:%M:%S %d.%m.%y"
+    val = "{start} - {end}".format(
+        start=vbuState.dtStart.strftime(DT_FRMT),
+        end=vbuState.dtFinish.strftime(DT_FRMT)
+    )
+    info = ParamWidgetDesc("Диапазон времени", val)
+    infos.append(info)
+
+    # Signal Min
+    info = LimitedParamWidgetDesc("Миним.  уровень сигнала", vbuState.signalMin,
+                           VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX)
+    infos.append(info)
+
+    # Signal Mean
+    info = LimitedParamWidgetDesc("Средний уровень сигнала", vbuState.signalMean,
+                           VbuState.SGNL_MEAN__MIN, VbuState.SGNL_MEAN__MAX)
+    infos.append(info)
+
+    # Signal Max
+    info = LimitedParamWidgetDesc("Максим. уровень сигнала", vbuState.signalMax,
+                           VbuState.SGNL_MAX__MIN, VbuState.SGNL_MAX__MAX)
+    infos.append(info)
+
+    # # Frequencies
+    # info = ParamWidgetInfo("Средний уровень частот", vbuState.signalMax,
+    #                        VbuState.SGNL_MAX__MIN, VbuState.SGNL_MAX__MAX)
+    # infos.append(info)
+
+    return infos
+
+def createParamWidgets(widgetDescriptions):
+    for descInd, desc in enumerate(widgetDescriptions):
+        # Create label and value fields and add them to proper frame
+        label = Label(paramFrame, text="{}: ".format(desc.label), font=PARAM_FONT_SIZE)
+        label.grid(row=descInd, column=0, sticky="nw")
+        if isinstance(desc.value, float):
+            valueStr = formatFloat(desc.value)
+        else:
+            valueStr = desc.value
+        value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
+        value.grid(row=descInd, column=1, sticky="nw")
+
+def formatFloat(val):
+    return "{:9.6f}".format(val)
 
 def readFileUsingConnection(sshClient, filePath):
     fileCont = None
@@ -281,52 +350,53 @@ def readFile(filePath, host, port, user, passwd):
 
 def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
-    mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
-    mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
+    # mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
+    # mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
     mainWnd.grid_rowconfigure(0, weight=1, uniform="fred2")
-    mainWnd.grid_rowconfigure(1, weight=4, uniform="fred2")
+    mainWnd.grid_rowconfigure(1, weight=2, uniform="fred2")
     # Param section
-    paramFrame = Frame(mainWnd, width=MAIN_WND_W / 3)
+    global paramFrame
+    paramFrame = Frame(mainWnd, width=MAIN_WND_W)
     paramFrame.grid(row=0, column=0, sticky="ewns", padx=10, pady=10)
-    paramFrame.grid_rowconfigure(0, weight=0)
-    paramFrame.grid_rowconfigure(1, weight=0)
-    paramFrame.grid_columnconfigure(0, weight=0)
-    paramFrame.grid_columnconfigure(1, weight=0)
-    # Param 1
-    param1Label = Label(paramFrame, text="Параметр 1: ", font=PARAM_FONT_SIZE)
-    param1Label.grid(row=0, column=0, sticky="nw")
-    param1StrVar = StringVar()
-    param1StrVar.set(str(1.25))
-    param1Val = Label(paramFrame, textvariable=param1StrVar, font=PARAM_FONT_SIZE)
-    param1Val.grid(row=0, column=1, sticky="nw")
-    # Param 2
-    param2Label = Label(paramFrame, text="Параметр 2: ", font=PARAM_FONT_SIZE)
-    param2Label.grid(row=1, column=0, sticky="nw")
-    global param2StrVar
-    param2StrVar = StringVar()
-    setParam2(0)
-    param2Val = Label(paramFrame, textvariable=param2StrVar, font=PARAM_FONT_SIZE)
-    param2Val.grid(row=1, column=1, sticky="nw")
-    # Custom widgets section
-    widgetFrame = Frame(mainWnd, width=MAIN_WND_W / 3)
-    widgetFrame.grid(row=0, column=1, sticky="ewns")
-    # Buttons section
-    buttonFrame = Frame(mainWnd, width=MAIN_WND_W / 3, padx=10, pady=10)
-    buttonFrame.grid(row=0, column=2, sticky="ewns")
-    # StartStop button
-    global startStopBtnText
-    startStopBtnText = StringVar()
-    startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
-
-    def startStopBtnClicked():
-        if not isMonRunning:
-            startMonitoring()
-        else:
-            stopMonitoring()
-
-    # startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
-    #                       font=PARAM_FONT_SIZE, width=12)
-    buttonFrame.grid_columnconfigure(0, weight=1)
+    # paramFrame.grid_rowconfigure(0, weight=0)
+    # paramFrame.grid_rowconfigure(1, weight=0)
+    # paramFrame.grid_columnconfigure(0, weight=0)
+    # paramFrame.grid_columnconfigure(1, weight=0)
+    # # Param 1
+    # param1Label = Label(paramFrame, text="Параметр 1: ", font=PARAM_FONT_SIZE)
+    # param1Label.grid(row=0, column=0, sticky="nw")
+    # param1StrVar = StringVar()
+    # param1StrVar.set(str(1.25))
+    # param1Val = Label(paramFrame, textvariable=param1StrVar, font=PARAM_FONT_SIZE)
+    # param1Val.grid(row=0, column=1, sticky="nw")
+    # # Param 2
+    # param2Label = Label(paramFrame, text="Параметр 2: ", font=PARAM_FONT_SIZE)
+    # param2Label.grid(row=1, column=0, sticky="nw")
+    # global param2StrVar
+    # param2StrVar = StringVar()
+    # setParam2(0)
+    # param2Val = Label(paramFrame, textvariable=param2StrVar, font=PARAM_FONT_SIZE)
+    # param2Val.grid(row=1, column=1, sticky="nw")
+    # # Custom widgets section
+    # widgetFrame = Frame(mainWnd, width=MAIN_WND_W / 3)
+    # widgetFrame.grid(row=0, column=1, sticky="ewns")
+    # # Buttons section
+    # buttonFrame = Frame(mainWnd, width=MAIN_WND_W / 3, padx=10, pady=10, bg='green')
+    # buttonFrame.grid(row=0, column=1, sticky="ewns")
+    # # StartStop button
+    # global startStopBtnText
+    # startStopBtnText = StringVar()
+    # startStopBtnText.set(BTN_TEXT__START_DIAGNOST)
+    #
+    # def startStopBtnClicked():
+    #     if not isMonRunning:
+    #         startMonitoring()
+    #     else:
+    #         stopMonitoring()
+    #
+    # # startStopBtn = Button(buttonFrame, textvariable=startStopBtnText, command=startStopBtnClicked,
+    # #                       font=PARAM_FONT_SIZE, width=12)
+    # buttonFrame.grid_columnconfigure(0, weight=1)
     # startStopBtn.grid(row=0, column=0, sticky="ne")
     # Log section
     logFrame = Frame(mainWnd, width=MAIN_WND_W, padx=10, pady=10)
