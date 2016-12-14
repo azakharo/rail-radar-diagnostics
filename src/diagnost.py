@@ -23,6 +23,7 @@ MAIN_WND_W = 640
 MAIN_WND_H = 480
 
 PARAM_FONT_SIZE = (None, 13)
+PARAM_TABLE_HDR_FONT = (None, 13, 'bold')
 
 # StartStop button
 isMonRunning = False
@@ -257,6 +258,29 @@ def processMsgsFromReader():
 
 
 def visualizeVbuState(state):
+    # Made the param frame's columns equal width
+    paramFrame.grid_columnconfigure(0, weight=1, uniform="params-grid")
+    paramFrame.grid_columnconfigure(1, weight=1, uniform="params-grid")
+    paramFrame.grid_columnconfigure(2, weight=1, uniform="params-grid")
+
+    # Disp time period
+    DT_FRMT = "%H:%M:%S %d.%m.%y"
+    timePeriodText = "Период времени: {start} - {end}".format(
+        start=state.dtStart.strftime(DT_FRMT),
+        end=state.dtFinish.strftime(DT_FRMT)
+    )
+    label = Label(paramFrame, text=timePeriodText, font=PARAM_FONT_SIZE)
+    label.grid(row=0, column=0, columnspan=3, sticky="nw")
+
+    # Disp param table's header
+    label = Label(paramFrame, text="Параметр", font=PARAM_TABLE_HDR_FONT)
+    label.grid(row=1, column=0, sticky="nw")
+    label = Label(paramFrame, text="Значение", font=PARAM_TABLE_HDR_FONT)
+    label.grid(row=1, column=1, sticky="ne")
+    label = Label(paramFrame, text="Допустимые значения", font=PARAM_TABLE_HDR_FONT)
+    label.grid(row=1, column=2, sticky="ne")
+
+    # Disp params
     descrs = createParamWidgetDescs(state)
     createParamWidgets(descrs)
 
@@ -275,15 +299,6 @@ class LimitedParamWidgetDesc(ParamWidgetDesc):
 
 def createParamWidgetDescs(vbuState):
     infos = []
-
-    # Time period
-    DT_FRMT = "%H:%M:%S %d.%m.%y"
-    val = "{start} - {end}".format(
-        start=vbuState.dtStart.strftime(DT_FRMT),
-        end=vbuState.dtFinish.strftime(DT_FRMT)
-    )
-    info = ParamWidgetDesc("Диапазон времени", val)
-    infos.append(info)
 
     # Signal Min
     info = LimitedParamWidgetDesc("Миним.  уровень сигнала", vbuState.signalMin,
@@ -308,17 +323,18 @@ def createParamWidgetDescs(vbuState):
     return infos
 
 def createParamWidgets(widgetDescriptions):
+    firstRowInd = 2
     for descInd, desc in enumerate(widgetDescriptions):
         # Create label and value fields and add them to proper frame
         label = Label(paramFrame, text="{}: ".format(desc.label), font=PARAM_FONT_SIZE)
-        label.grid(row=descInd, column=0, sticky="nw")
+        label.grid(row=descInd + firstRowInd, column=0, sticky="nw")
         v = desc.value
         if isinstance(v, float):
             valueStr = formatFloat(v)
         else:
             valueStr = v
         value = Label(paramFrame, text=valueStr, font=PARAM_FONT_SIZE)
-        value.grid(row=descInd, column=1, sticky="nw")
+        value.grid(row=descInd + firstRowInd, column=1, sticky="ne")
         if isinstance(desc, LimitedParamWidgetDesc):
             # Select value's color
             if desc.isInBoundaries():
@@ -329,7 +345,7 @@ def createParamWidgets(widgetDescriptions):
             # Output the limits
             limits = Label(paramFrame, text='[{min:5.2f}, {max:5.2f}]'.format(min=desc.min, max=desc.max),
                            font=PARAM_FONT_SIZE)
-            limits.grid(row=descInd, column=2, sticky="nw")
+            limits.grid(row=descInd + firstRowInd, column=2, sticky="ne")
 
 
 def formatFloat(val):
