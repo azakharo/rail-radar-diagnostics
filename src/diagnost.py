@@ -34,6 +34,10 @@ param2StrVar = None
 logWidget = None
 startStopBtnText = None
 
+vbuReaderThread = None
+isVbuStateReading = False
+
+
 def main():
     # Stuff necessary to build the exe
     patch_crypto_be_discovery()
@@ -59,6 +63,10 @@ def main():
     # Create layout and widgets
     createLayoutAndWidgets(mainWnd)
 
+    # Read VBU State
+    startVbuRead()
+    guiPeriodicCall()
+
     # Gracefully stop mon on exit
     mainWnd.wm_protocol("WM_DELETE_WINDOW", onExit)
 
@@ -69,8 +77,61 @@ def main():
 
 
 def onExit():
+    stopVbuRead()
     stopMonitoring()
     mainWnd.destroy()
+
+
+#////////////////////////////////////////////////////////////////////
+# Read Vbu State
+
+def startVbuRead():
+    global isVbuStateReading
+    isVbuStateReading = True
+
+    # Create and run the reader thread
+    global vbuReaderThread
+    vbuReaderThread = Thread(target=readVbuState)
+    vbuReaderThread.start()
+
+    # Start GUI periodic checks of the queue and msg processing
+    guiPeriodicCall()
+
+def stopVbuRead():
+    global isVbuStateReading
+    isVbuStateReading = False
+
+    global vbuReaderThread
+    if vbuReaderThread:
+        vbuReaderThread = None
+
+def readVbuState():
+    vbuStateFileCont = None
+    try:
+        vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
+                                    appConfig.user, appConfig.passwd)
+    except Exception, e:
+        errMsg = "Could not read VBU State file\n{exc}".format(exc=str(e))
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
+
+    # Parse vbu state file
+    log("VBU STATE HAS BEEN READ!")
+    log(vbuStateFileCont[-20:])
+    pass
+
+    # Pass parsed vbu state to UI
+    pass
+
+    global isVbuStateReading
+    isVbuStateReading = False
+
+# Read Vbu State
+#////////////////////////////////////////////////////////////////////
 
 
 def startMonitoring():
@@ -81,6 +142,7 @@ def startMonitoring():
     startStopBtnText.set(BTN_TEXT__STOP_DIAGNOST)
 
     # Create and run the reader thread
+    global readerThread
     readerThread = Thread(target=readerThreadFunc)
     readerThread.start()
 
@@ -149,7 +211,7 @@ def readerThreadFunc():
 
 def guiPeriodicCall():
     """ Check every 200 ms if there is something new in the queue. """
-    if isMonRunning:
+    if isMonRunning or isVbuStateReading:
         mainWnd.after(200, guiPeriodicCall)
     processMsgsFromReader()
 
