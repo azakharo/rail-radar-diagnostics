@@ -258,6 +258,12 @@ def processMsgsFromReader():
 
 
 def visualizeVbuState(state):
+    if state == None:
+        printLogMsg("В данной конфигурации радиоканал не используется. Диагностика закончена.")
+        return
+
+    printLogMsg("Диагностика успешно завершена.")
+
     # Made the param frame's columns equal width
     paramFrame.grid_columnconfigure(0, weight=1, uniform="params-grid")
     paramFrame.grid_columnconfigure(1, weight=1, uniform="params-grid")
