@@ -37,7 +37,6 @@ logWidget = None
 # startStopBtnText = None
 
 vbuReaderThread = None
-isVbuStateReading = False
 
 paramFrame = None
 
@@ -92,24 +91,17 @@ def onExit():
 # Read Vbu State
 
 def startVbuRead():
-    global isVbuStateReading
-    isVbuStateReading = True
-
     # Create and run the reader thread
     global vbuReaderThread
     vbuReaderThread = Thread(target=readVbuState)
     vbuReaderThread.start()
 
 def stopVbuRead():
-    global isVbuStateReading
-    isVbuStateReading = False
-
     global vbuReaderThread
     if vbuReaderThread:
         vbuReaderThread = None
 
 def readVbuState():
-    global isVbuStateReading
     vbuStateFileCont = None
 
     try:
@@ -122,7 +114,6 @@ def readVbuState():
             'name': 'error',
             'value': errMsg
         })
-        isVbuStateReading = False
         return
 
     # Parse vbu state file
@@ -135,7 +126,6 @@ def readVbuState():
             'name': 'error',
             'value': errMsg
         })
-        isVbuStateReading = False
         return
     # log(vbuState)
 
@@ -144,9 +134,6 @@ def readVbuState():
         'name': 'vbuState',
         'value': vbuState
     })
-
-    isVbuStateReading = False
-
 
 # Read Vbu State
 #////////////////////////////////////////////////////////////////////
@@ -229,9 +216,7 @@ def readerThreadFunc():
 
 def guiPeriodicCall():
     """ Check every 200 ms if there is something new in the queue. """
-    # log("guiPeriodicCall")
-    if isMonRunning or isVbuStateReading:
-        mainWnd.after(200, guiPeriodicCall)
+    mainWnd.after(200, guiPeriodicCall)
     processMsgsFromReader()
 
 
