@@ -38,6 +38,8 @@ logWidget = None
 
 paramFrame = None
 
+isStateReading = False
+
 
 def main():
     # Stuff necessary to build the exe
@@ -66,6 +68,9 @@ def main():
 
     # Read VBU State
     startVbuRead(appConfig, eventQueue)
+    printLogMsg(u"Диагностика начата. Пожалуйста, подождите.", False)
+    global isStateReading
+    isStateReading = True
 
     # Start GUI periodic check of input queue
     guiPeriodicCall()
@@ -158,10 +163,18 @@ def readerThreadFunc():
     sshClient.close()
 
 
+periodicCallCount = 0
+
 def guiPeriodicCall():
     """ Check every 200 ms if there is something new in the queue. """
     mainWnd.after(200, guiPeriodicCall)
     processMsgsFromReader()
+    # Print progress indicator if vbu state is being read
+    if isStateReading:
+        global periodicCallCount
+        periodicCallCount += 1
+        if periodicCallCount % 5 == 0:
+            _writeLogMsg(u'.', True)
 
 
 def processMsgsFromReader():
@@ -171,6 +184,11 @@ def processMsgsFromReader():
             msg = eventQueue.get(0)
             msgName = msg['name']
             msgVal = msg['value']
+
+            global isStateReading
+            if isStateReading:
+                isStateReading = False
+
             if msgName == 'param2':
                 prevVal = getParam2()
                 if msgVal != prevVal:
@@ -362,15 +380,21 @@ def setParam2(val):
     if param2StrVar:
         param2StrVar.set(str(val))
 
-def printLogMsg(msg):
+
+def printLogMsg(msg, endLine=True):
     if not isinstance(msg, unicode):
         errMsg = "only Unicode must be passed to the log widget"
         warn(errMsg)
         raise Exception(errMsg)
     dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
-    logMsg = u"{dt} - {msg}\n".format(dt=dt, msg=msg)
+    logMsg = u"{dt} - {msg}".format(dt=dt, msg=msg)
+    if endLine:
+        logMsg = logMsg + u'\n'
+    _writeLogMsg(logMsg)
+
+def _writeLogMsg(msg, toEnd=False):
     logWidget.configure(state="normal")
-    logWidget.insert('1.0', logMsg)
+    logWidget.insert('end' if toEnd else '1.0', msg)
     logWidget.configure(state="disabled")
 
 
