@@ -13,7 +13,7 @@ def readFile(filePath, host, port, user, passwd):
     try:
         sshClient = paramiko.SSHClient()
         sshClient.load_system_host_keys()
-        sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
+        sshClient.set_missing_host_key_policy(paramiko.WarningPolicy())
 
         sshClient.connect(host, port=port, username=user, password=passwd)
 
