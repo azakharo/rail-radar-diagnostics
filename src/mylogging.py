@@ -18,7 +18,7 @@ def info(msg):
 
 
 def warn(msg):
-    _logger.warning(msg)
+    _logger.warning("WARNING: " + msg)
 
 
 def err(msg):

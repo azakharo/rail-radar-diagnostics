@@ -13,7 +13,7 @@ from os import getcwd
 import attr
 import paramiko
 import scpclient
-from mylogging import log, info, err
+from mylogging import log, info, err, warn
 from appConfig import AppConfig
 from vbu_state_parsing import parseVbuStateFile
 from VbuState import VbuState
@@ -465,6 +465,10 @@ def setParam2(val):
         param2StrVar.set(str(val))
 
 def printLogMsg(msg):
+    if not isinstance(msg, unicode):
+        errMsg = "only Unicode must be passed to the log widget"
+        warn(errMsg)
+        raise Exception(errMsg)
     dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
     logMsg = u"{dt} - {msg}\n".format(dt=dt, msg=msg)
     logWidget.configure(state="normal")
