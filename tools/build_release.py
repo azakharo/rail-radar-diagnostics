@@ -1,10 +1,16 @@
 ﻿#! python2
 # -*- coding: utf-8 -*-
 
-import logging
+
 from os.path import dirname, join, exists
 from shutil import copy
 import subprocess
+import sys
+
+# Add src dir to import paths
+SRC_ROOT = join(dirname(__file__), "..", 'src')
+sys.path.append(SRC_ROOT)
+from mylogging import info, err
 
 DIST_DIR = '../.build/dist'
 EXE_FNAME = 'diagnost.exe'
@@ -43,26 +49,6 @@ def main():
     copy(setupExeSrcPath, DROPBOX_DIR)
 
     info("DONE")
-
-
-##################################
-# Logging
-
-FORMAT = '%(message)s'
-logging.basicConfig(format=FORMAT)
-_logger = logging.getLogger()
-_logger.setLevel(logging.DEBUG)
-
-def log(msg):
-    _logger.debug(msg)
-
-def info(msg):
-    _logger.info(msg)
-
-def err(msg):
-    _logger.error("ERROR: " + msg)
-
-##################################
 
 
 if __name__ == '__main__':
