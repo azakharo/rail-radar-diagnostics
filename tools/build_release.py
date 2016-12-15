@@ -17,7 +17,8 @@ EXE_FNAME = 'diagnost.exe'
 SETUP_EXE_FNAME = 'DiagnostSetup.exe'
 FILES2COPY = [
     '../src/favicon.ico',
-    '../config/diagnost.cfg'
+    '../config/diagnost.cfg',
+    '../doc/README.txt'
 ]
 
 DROPBOX_EXE_DIR = 'C:/Users/zakhar/AppData/Roaming/Dropbox/bin'
