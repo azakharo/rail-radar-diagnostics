@@ -25,10 +25,11 @@ DROPBOX_DIR = 'C:/Users/zakhar/Dropbox/Public'
 
 
 def main():
-    # Run Dropbox
+    info("Run Dropbox")
     subprocess.Popen([join(DROPBOX_EXE_DIR, 'Dropbox.exe')], cwd=DROPBOX_EXE_DIR)
+    infoSep()
 
-    # Run build exe script
+    info("Run build exe script")
     subprocess.call("build_exe.bat", shell=True)
 
     # Check the build has been completed
@@ -36,19 +37,26 @@ def main():
     if not exists(exePath):
         err('{exe} was not built!'.format(exe=EXE_FNAME))
         return 1
+    infoSep()
 
-    # Copy file to the dist dir
+    info("Copy additional files to the dist dir")
     for f in FILES2COPY:
         copy(f, DIST_DIR)
+    infoSep()
 
-    # Build setup.exe
+    info("Build setup.exe")
     subprocess.call(["C:/Program Files (x86)/NSIS/makensis.exe", "build_installer.nsi"], shell=True)
+    infoSep()
 
-    # Copy the setup exe to Dropbox dir
+    info("Copy the setup exe to Dropbox dir")
     setupExeSrcPath = join(DIST_DIR, SETUP_EXE_FNAME)
     copy(setupExeSrcPath, DROPBOX_DIR)
+    infoSep()
 
     info("DONE")
+
+def infoSep():
+    info("===============================================================================")
 
 
 if __name__ == '__main__':
