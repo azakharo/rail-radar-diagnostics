@@ -112,29 +112,33 @@ def stopVbuRead():
         vbuReaderThread = None
 
 def readVbuState():
+    global isVbuStateReading
     vbuStateFileCont = None
+
     try:
         vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
                                     appConfig.user, appConfig.passwd)
     except Exception, e:
-        errMsg = "Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=str(e))
+        errMsg = u"Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(e))
         err(errMsg)
         eventQueue.put({
             'name': 'error',
             'value': errMsg
         })
+        isVbuStateReading = False
         return
 
     # Parse vbu state file
     try:
         vbuState = parseVbuStateFile(vbuStateFileCont)
     except Exception, ex:
-        errMsg = "Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=str(ex))
+        errMsg = u"Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(ex))
         err(errMsg)
         eventQueue.put({
             'name': 'error',
             'value': errMsg
         })
+        isVbuStateReading = False
         return
     # log(vbuState)
 
@@ -144,7 +148,6 @@ def readVbuState():
         'value': vbuState
     })
 
-    global isVbuStateReading
     isVbuStateReading = False
 
 
@@ -189,8 +192,8 @@ def readerThreadFunc():
 
         sshClient.connect(appConfig.host, port=appConfig.port, username=appConfig.user, password=appConfig.passwd)
     except Exception, e:
-        errMsg = "Could not connect to {host}:{port}\n{exc}".format(
-            host=appConfig.host, port=appConfig.port, exc=str(e))
+        errMsg = u"Could not connect to {host}:{port}\n{exc}".format(
+            host=appConfig.host, port=appConfig.port, exc=unicode(e))
         err(errMsg)
         eventQueue.put({
             'name': 'error',
@@ -205,8 +208,8 @@ def readerThreadFunc():
         try:
             val = float(readFileUsingConnection(sshClient, appConfig.statePath))
         except Exception, e:
-            errMsg = "Could not read {file} from {host}:{port}\n{exc}".format(
-                file=appConfig.statePath, host=appConfig.host, port=appConfig.port, exc=str(e))
+            errMsg = u"Could not read {file} from {host}:{port}\n{exc}".format(
+                file=appConfig.statePath, host=appConfig.host, port=appConfig.port, exc=unicode(e))
             err(errMsg)
             eventQueue.put({
                 'name': 'error',
@@ -229,6 +232,7 @@ def readerThreadFunc():
 
 def guiPeriodicCall():
     """ Check every 200 ms if there is something new in the queue. """
+    # log("guiPeriodicCall")
     if isMonRunning or isVbuStateReading:
         mainWnd.after(200, guiPeriodicCall)
     processMsgsFromReader()
@@ -247,7 +251,7 @@ def processMsgsFromReader():
                     # Update param2 value in the UI
                     setParam2(msgVal)
                     # Print log msg into the log widget
-                    printLogMsg("новое значение параметра 2: {}".format(msgVal))
+                    printLogMsg(u"новое значение параметра 2: {}".format(msgVal))
             elif msgName == 'error':
                 printLogMsg(msgVal)
                 stopMonitoring()
@@ -259,10 +263,10 @@ def processMsgsFromReader():
 
 def visualizeVbuState(state):
     if state == None:
-        printLogMsg("В данной конфигурации радиоканал не используется. Диагностика закончена.")
+        printLogMsg(u"В данной конфигурации радиоканал не используется. Диагностика закончена.")
         return
 
-    printLogMsg("Диагностика успешно завершена.")
+    printLogMsg(u"Диагностика успешно завершена.")
 
     # Made the param frame's columns equal width
     paramFrame.grid_columnconfigure(0, weight=1, uniform="params-grid")
@@ -380,9 +384,6 @@ def readFile(filePath, host, port, user, passwd):
         sshClient.connect(host, port=port, username=user, password=passwd)
 
         fileCont = readFileUsingConnection(sshClient, filePath)
-    except:
-        err("Could not read {file} from {host}:{port}".format(file=filePath, host=host, port=port))
-        raise
     finally:
         sshClient.close()
     return fileCont
@@ -465,7 +466,7 @@ def setParam2(val):
 
 def printLogMsg(msg):
     dt = datetime.now().strftime("%d.%m.%y %H:%M:%S")
-    logMsg = "{dt} - {msg}\n".format(dt=dt, msg=msg)
+    logMsg = u"{dt} - {msg}\n".format(dt=dt, msg=msg)
     logWidget.configure(state="normal")
     logWidget.insert('1.0', logMsg)
     logWidget.configure(state="disabled")
