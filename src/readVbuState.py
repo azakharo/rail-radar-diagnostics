@@ -3,9 +3,50 @@
 
 import re
 from datetime import datetime
+from threading import Thread
 from VbuState import VbuState
 from mylogging import log, err
+from scp import readFile
 
+
+def startVbuRead(appCfg, uiEventQueue):
+    # Create and run the reader thread
+    vbuReaderThread = Thread(target=readVbuState, kwargs={'appConfig': appCfg, 'eventQueue': uiEventQueue})
+    vbuReaderThread.start()
+
+def readVbuState(appConfig, eventQueue):
+    vbuStateFileCont = None
+
+    try:
+        vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
+                                    appConfig.user, appConfig.passwd)
+    except Exception, e:
+        errMsg = u"Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(e))
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
+
+    # Parse vbu state file
+    try:
+        vbuState = parseVbuStateFile(vbuStateFileCont)
+    except Exception, ex:
+        errMsg = u"Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(ex))
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
+    # log(vbuState)
+
+    # Pass parsed vbu state to UI
+    eventQueue.put({
+        'name': 'vbuState',
+        'value': vbuState
+    })
 
 def parseVbuStateFile(fileContent):
     """

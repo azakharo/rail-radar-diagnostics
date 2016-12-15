@@ -12,9 +12,9 @@ from os import getcwd
 import attr
 from mylogging import log, info, err, warn
 from appConfig import AppConfig
-from readVbuState import parseVbuStateFile
 from VbuState import VbuState
-from scp import readFile, readFileUsingConnection
+from scp import readFileUsingConnection
+from readVbuState import startVbuRead
 
 
 MAIN_WND_W = 640
@@ -65,7 +65,7 @@ def main():
     createLayoutAndWidgets(mainWnd)
 
     # Read VBU State
-    startVbuRead()
+    startVbuRead(appConfig, eventQueue)
 
     # Start GUI periodic check of input queue
     guiPeriodicCall()
@@ -82,53 +82,6 @@ def main():
 def onExit():
     stopMonitoring()
     mainWnd.destroy()
-
-
-#////////////////////////////////////////////////////////////////////
-# Read Vbu State
-
-def startVbuRead():
-    # Create and run the reader thread
-    vbuReaderThread = Thread(target=readVbuState)
-    vbuReaderThread.start()
-
-def readVbuState():
-    vbuStateFileCont = None
-
-    try:
-        vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
-                                    appConfig.user, appConfig.passwd)
-    except Exception, e:
-        errMsg = u"Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(e))
-        err(errMsg)
-        eventQueue.put({
-            'name': 'error',
-            'value': errMsg
-        })
-        return
-
-    # Parse vbu state file
-    try:
-        vbuState = parseVbuStateFile(vbuStateFileCont)
-    except Exception, ex:
-        errMsg = u"Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(ex))
-        err(errMsg)
-        eventQueue.put({
-            'name': 'error',
-            'value': errMsg
-        })
-        return
-    # log(vbuState)
-
-    # Pass parsed vbu state to UI
-    eventQueue.put({
-        'name': 'vbuState',
-        'value': vbuState
-    })
-
-# Read Vbu State
-#////////////////////////////////////////////////////////////////////
-
 
 def startMonitoring():
     global isMonRunning
