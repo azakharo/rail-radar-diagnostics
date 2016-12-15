@@ -69,6 +69,8 @@ def main():
 
     # Read VBU State
     startVbuRead()
+
+    # Start GUI periodic check of input queue
     guiPeriodicCall()
 
     # Gracefully stop mon on exit
@@ -97,9 +99,6 @@ def startVbuRead():
     global vbuReaderThread
     vbuReaderThread = Thread(target=readVbuState)
     vbuReaderThread.start()
-
-    # Start GUI periodic checks of the queue and msg processing
-    guiPeriodicCall()
 
 def stopVbuRead():
     global isVbuStateReading
