@@ -12,7 +12,7 @@ from os import getcwd
 import attr
 from mylogging import log, info, err, warn
 from appConfig import AppConfig
-from vbu_state_parsing import parseVbuStateFile
+from readVbuState import parseVbuStateFile
 from VbuState import VbuState
 from scp import readFile, readFileUsingConnection
 
@@ -35,8 +35,6 @@ mainWnd = None
 param2StrVar = None
 logWidget = None
 # startStopBtnText = None
-
-vbuReaderThread = None
 
 paramFrame = None
 
@@ -82,7 +80,6 @@ def main():
 
 
 def onExit():
-    stopVbuRead()
     stopMonitoring()
     mainWnd.destroy()
 
@@ -92,14 +89,8 @@ def onExit():
 
 def startVbuRead():
     # Create and run the reader thread
-    global vbuReaderThread
     vbuReaderThread = Thread(target=readVbuState)
     vbuReaderThread.start()
-
-def stopVbuRead():
-    global vbuReaderThread
-    if vbuReaderThread:
-        vbuReaderThread = None
 
 def readVbuState():
     vbuStateFileCont = None
