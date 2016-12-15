@@ -291,8 +291,8 @@ def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
     # mainWnd.grid_columnconfigure(1, weight=1, uniform="fred")
     # mainWnd.grid_columnconfigure(2, weight=1, uniform="fred")
-    mainWnd.grid_rowconfigure(0, weight=2, uniform="fred2")
-    mainWnd.grid_rowconfigure(1, weight=1, uniform="fred2")
+    mainWnd.grid_rowconfigure(0, weight=3, uniform="fred2")
+    mainWnd.grid_rowconfigure(1, weight=2, uniform="fred2")
     # Param section
     global paramFrame
     paramFrame = Frame(mainWnd, width=MAIN_WND_W)
