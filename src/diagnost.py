@@ -1,22 +1,20 @@
 #! python2
 # -*- coding: utf-8 -*-
 
-from os.path import dirname, basename, join
+from os.path import join
 from datetime import datetime
 from Tkinter import Tk, Frame, Label, StringVar, Button, Text, Scrollbar
 from threading import Thread
 from Queue import Queue
 from time import sleep
-from contextlib import closing
 from glob import glob
 from os import getcwd
 import attr
-import paramiko
-import scpclient
 from mylogging import log, info, err, warn
 from appConfig import AppConfig
 from vbu_state_parsing import parseVbuStateFile
 from VbuState import VbuState
+from scp import readFile, readFileUsingConnection
 
 
 MAIN_WND_W = 640
@@ -358,36 +356,8 @@ def createParamWidgets(widgetDescriptions):
                            font=PARAM_FONT_SIZE)
             limits.grid(row=descInd + firstRowInd, column=2, sticky="ne")
 
-
 def formatFloat(val):
     return "{:9.6f}".format(val)
-
-def readFileUsingConnection(sshClient, filePath):
-    fileCont = None
-    fname = basename(filePath)
-    fdir = dirname(filePath)
-    if not fdir.endswith("/"):  # this is important for scpclient
-        fdir += "/"
-    with closing(scpclient.Read(sshClient.get_transport(), fdir)) as scp:
-        fileCont = scp.receive(fname)
-    return fileCont
-
-
-def readFile(filePath, host, port, user, passwd):
-    sshClient = None
-    fileCont = None
-    try:
-        sshClient = paramiko.SSHClient()
-        sshClient.load_system_host_keys()
-        sshClient.set_missing_host_key_policy(paramiko.WarningPolicy)
-
-        sshClient.connect(host, port=port, username=user, password=passwd)
-
-        fileCont = readFileUsingConnection(sshClient, filePath)
-    finally:
-        sshClient.close()
-    return fileCont
-
 
 def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
