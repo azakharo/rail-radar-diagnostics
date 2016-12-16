@@ -1,0 +1,2 @@
+* production: logging to file.
+* tkinter intercept exceptions in UI thread.
