@@ -208,7 +208,6 @@ def processMsgsFromReader():
                     printLogMsg(u'Устройство недоступно. Пожалуйста, убедитесь, что оно подключено к электропитанию и сети Ethernet. Затем нажмите кнопку "Повторить".')
                     showRetryBtn()
                 else:
-                    showRetryBtn()
                     printLogMsg(msgVal)
                     stopMonitoring()
             elif msgName == 'vbuState':

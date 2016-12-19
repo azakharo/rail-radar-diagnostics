@@ -5,8 +5,10 @@ import re
 from datetime import datetime
 from threading import Thread
 import subprocess
+from paramiko.ssh_exception import AuthenticationException, NoValidConnectionsError
+from scpclient import SCPError
 from VbuState import VbuState
-from mylogging import log, info, warn, err
+from mylogging import log, info, warn, err, exception
 from scp import readFile
 from windows_networking import getEthernetInfo
 
@@ -63,34 +65,48 @@ def readVbuState(appConfig, eventQueue):
         })
         return
 
+    # Just common code to avoid code dupl
+    def handleException(errMsg, isNetworkChanged, ifaceName, eventQueue):
+        exception(errMsg)
+        if isNetworkChanged:
+            restoreEthernetSettings(ifaceName)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+
     # Read VBU state file content
     vbuStateFileCont = None
     try:
         vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
                                     appConfig.user, appConfig.passwd)
-    except Exception, e:
-        errMsg = u"Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(e))
-        err(errMsg)
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
-        eventQueue.put({
-            'name': 'error',
-            'value': errMsg
-        })
+    except AuthenticationException:
+        errMsg = u"SSH: ошибка аутентификации."
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
+    except NoValidConnectionsError:
+        errMsg = u"SSH: не удалось подключиться к '{host}', порт {port}".format(host=appConfig.host, port=appConfig.port)
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
+    except SCPError:
+        errMsg = u"Возможно, запуск устройства был произведен менее часа назад. Необходимо повторить диагностику по истечении одного часа после запуска. Если сообщение повторится, то устройство необходимо заменить."
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
+    except Exception, ex:
+        errMsg = unicode(ex)
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
 
     # Parse vbu state file
     try:
         vbuState = parseVbuStateFile(vbuStateFileCont)
-    except Exception, ex:
-        errMsg = u"Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(ex))
-        err(errMsg)
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
-        eventQueue.put({
-            'name': 'error',
-            'value': errMsg
-        })
+    except VbuEmpty:
+        errMsg = u"Устройство необходимо заменить"
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
+    except Exception:
+        errMsg = u"Не удалось разобрать содержимое файла состояния"
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     # log(vbuState)
 
@@ -114,6 +130,16 @@ def restoreEthernetSettings(ifaceName):
         warn("restore Ethernet cmd returned {}".format(exitCode))
     return exitCode
 
+
+class VbuEmpty(Exception):
+    pass
+
+class NoFree(Exception):
+    pass
+
+class NoFreqs(Exception):
+    pass
+
 def parseVbuStateFile(fileContent):
     """
     :param fileContent:
@@ -125,7 +151,7 @@ def parseVbuStateFile(fileContent):
     lines = [l for l in lines if len(l) > 0]
     # log(len(lines))
     if len(lines) == 0:
-        return None
+        raise VbuEmpty()
 
     # Find the last "free" line
     freeLine = None
