@@ -11,6 +11,7 @@ from mylogging import log
 class EthernetInfo(object):
     ifaceName = attr.ib()
     isConnected = attr.ib()
+    ip = attr.ib(default=None)
 
 
 def getEthernetInfo():
@@ -44,8 +45,16 @@ def getEthernetInfo():
         if matchResult:
             isDisconnected = True
             break
+    if not isDisconnected:
+        # Find address
+        ipAddr = None
+        for lineInd in xrange(lineIndStart, lineIndEnd + 1):
+            matchResult = re.match("^.*IPv4\s+Address.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
+            if matchResult:
+                ipAddr = matchResult.group('ip')
+                break
 
-    return EthernetInfo(ethAdapterLine.ifaceName, not isDisconnected)
+    return EthernetInfo(ethAdapterLine.ifaceName, not isDisconnected, ipAddr)
 
 
 @attr.s

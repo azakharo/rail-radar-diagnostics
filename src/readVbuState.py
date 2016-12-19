@@ -4,6 +4,7 @@
 import re
 from datetime import datetime
 from threading import Thread
+import subprocess
 from VbuState import VbuState
 from mylogging import log, info, err
 from scp import readFile
@@ -15,6 +16,13 @@ def startVbuRead(appCfg, uiEventQueue):
     vbuReaderThread = Thread(target=readVbuState, kwargs={'appConfig': appCfg, 'eventQueue': uiEventQueue})
     vbuReaderThread.start()
 
+def getSubnet(ip):
+    subnet = None
+    matchResult = re.match("^(?P<subnet>\d+\.\d+\.\d+)\.\d+$", ip)
+    if matchResult:
+        subnet = matchResult.group('subnet')
+    return subnet
+
 def readVbuState(appConfig, eventQueue):
     # Check Ethernet connected
     eth = getEthernetInfo()
@@ -25,6 +33,28 @@ def readVbuState(appConfig, eventQueue):
             'value': 'EthernetNotConnected'
         })
         return
+    # log(eth)
+
+    # Check whether network conf is needed
+    if getSubnet(appConfig.host) != getSubnet(eth.ip):
+        info("Need to change Ethernet settings")
+        # netsh interface ip set address name="Ethernet" source=static addr=192.168.0.1 mask=255.255.255.0 gateway=none
+        exitCode = subprocess.call(['netsh', 'interface', 'ip', 'set', 'address',
+                                    'name="{eth_name}"'.format(eth_name=eth.ifaceName),
+                                    'source=static',
+                                    'addr={subnet}.1'.format(subnet=getSubnet(appConfig.host)),
+                                    'mask=255.255.255.0',
+                                    'gateway=none'],
+                                   shell=True)
+        log(exitCode)
+
+    # Dummy code
+    eventQueue.put({
+        'name': 'error',
+        'value': u'dummy exit'
+    })
+    return
+
 
     vbuStateFileCont = None
 
