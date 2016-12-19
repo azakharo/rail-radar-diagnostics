@@ -42,16 +42,6 @@ retryBtn = None
 isStateReading = False
 
 
-def showRetryBtn():
-    def onRetryBtnClick():
-        run()
-
-    global retryBtn
-    retryBtn = Button(paramFrame, text="Повторить", command=onRetryBtnClick,
-                          font=PARAM_FONT_SIZE, width=12)
-    retryBtn.grid(row=0, column=2, sticky="ne")
-
-
 def main():
     # Stuff necessary to build the exe
     patch_crypto_be_discovery()
@@ -218,9 +208,11 @@ def processMsgsFromReader():
                     printLogMsg(u'Устройство недоступно. Пожалуйста, убедитесь, что оно подключено к электропитанию и сети Ethernet. Затем нажмите кнопку "Повторить".')
                     showRetryBtn()
                 else:
+                    showRetryBtn()
                     printLogMsg(msgVal)
                     stopMonitoring()
             elif msgName == 'vbuState':
+                hideRetryBtn()
                 visualizeVbuState(msgVal)
         except:
             pass
@@ -419,6 +411,35 @@ def _writeLogMsg(msg, toEnd=True):
     logWidget.insert('end' if toEnd else '1.0', msg)
     logWidget.see("end")
     logWidget.configure(state="disabled")
+
+
+#/////////////////////////////////////////////////////////////////////////
+# Retry button
+
+def onRetryBtnClick():
+    retryBtn.configure(state="disabled")
+    run()
+
+def showRetryBtn():
+    global retryBtn
+
+    if not retryBtn:
+        retryBtn = Button(paramFrame, text="Повторить", command=onRetryBtnClick,
+                              font=PARAM_FONT_SIZE, width=12)
+        retryBtn.grid(row=0, column=2, sticky="ne")
+    else:
+        enableRetryBtn()
+
+def enableRetryBtn():
+    if retryBtn:
+        retryBtn.configure(state="normal")
+
+def hideRetryBtn():
+    if retryBtn:
+        retryBtn.grid_remove()
+
+# Retry button
+#/////////////////////////////////////////////////////////////////////////
 
 
 def patch_crypto_be_discovery():

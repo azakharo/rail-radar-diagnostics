@@ -55,12 +55,12 @@ def readVbuState(appConfig, eventQueue):
     exitCode = subprocess.call(['ping', '-n', '1', appConfig.host], shell=True)
     if exitCode != 0:
         info("Host {host} is inaccessible".format(host=appConfig.host))
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
         eventQueue.put({
             'name': 'error',
             'value': 'HostInaccessible'
         })
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
         return
 
     # Read VBU state file content
@@ -71,12 +71,12 @@ def readVbuState(appConfig, eventQueue):
     except Exception, e:
         errMsg = u"Could not read VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(e))
         err(errMsg)
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
         eventQueue.put({
             'name': 'error',
             'value': errMsg
         })
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
         return
 
     # Parse vbu state file
@@ -85,12 +85,12 @@ def readVbuState(appConfig, eventQueue):
     except Exception, ex:
         errMsg = u"Could not parse VBU State file '{file}'\n{exc}".format(file=appConfig.statePath, exc=unicode(ex))
         err(errMsg)
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
         eventQueue.put({
             'name': 'error',
             'value': errMsg
         })
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
         return
     # log(vbuState)
 
