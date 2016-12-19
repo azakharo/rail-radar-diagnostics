@@ -211,8 +211,11 @@ def processMsgsFromReader():
                     # Print log msg into the log widget
                     printLogMsg(u"новое значение параметра 2: {}".format(msgVal))
             elif msgName == 'error':
-                if (msgVal == 'EthernetNotConnected'):
+                if msgVal == 'EthernetNotConnected':
                     printLogMsg(u'Отсутствует подключение Ethernet. Пожалуйста, подключите соответствующий кабель к этому компьютеру и нажмите кнопку "Повторить".')
+                    showRetryBtn()
+                elif msgVal == 'HostInaccessible':
+                    printLogMsg(u'Устройство недоступно. Пожалуйста, убедитесь, что оно подключено к электропитанию и сети Ethernet. Затем нажмите кнопку "Повторить".')
                     showRetryBtn()
                 else:
                     printLogMsg(msgVal)

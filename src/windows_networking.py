@@ -45,9 +45,9 @@ def getEthernetInfo():
         if matchResult:
             isDisconnected = True
             break
+    ipAddr = None
     if not isDisconnected:
         # Find address
-        ipAddr = None
         for lineInd in xrange(lineIndStart, lineIndEnd + 1):
             matchResult = re.match("^.*IPv4\s+Address.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
             if matchResult:

@@ -6,7 +6,7 @@ from datetime import datetime
 from threading import Thread
 import subprocess
 from VbuState import VbuState
-from mylogging import log, info, err
+from mylogging import log, info, warn, err
 from scp import readFile
 from windows_networking import getEthernetInfo
 
@@ -35,7 +35,8 @@ def readVbuState(appConfig, eventQueue):
         return
     # log(eth)
 
-    # Check whether network conf is needed
+    # Check whether network conf is needed and perform it
+    isNetworkChanged = False
     if getSubnet(appConfig.host) != getSubnet(eth.ip):
         info("Need to change Ethernet settings")
         # netsh interface ip set address name="Ethernet" source=static addr=192.168.0.1 mask=255.255.255.0 gateway=none
@@ -46,18 +47,24 @@ def readVbuState(appConfig, eventQueue):
                                     'mask=255.255.255.0',
                                     'gateway=none'],
                                    shell=True)
-        log(exitCode)
+        if exitCode == 0:
+            isNetworkChanged = True
+        # log(exitCode)
 
-    # Dummy code
-    eventQueue.put({
-        'name': 'error',
-        'value': u'dummy exit'
-    })
-    return
+    # Ping the host
+    exitCode = subprocess.call(['ping', '-n', '1', appConfig.host], shell=True)
+    if exitCode != 0:
+        info("Host {host} is inaccessible".format(host=appConfig.host))
+        eventQueue.put({
+            'name': 'error',
+            'value': 'HostInaccessible'
+        })
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
+        return
 
-
+    # Read VBU state file content
     vbuStateFileCont = None
-
     try:
         vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
                                     appConfig.user, appConfig.passwd)
@@ -68,6 +75,8 @@ def readVbuState(appConfig, eventQueue):
             'name': 'error',
             'value': errMsg
         })
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
         return
 
     # Parse vbu state file
@@ -80,14 +89,30 @@ def readVbuState(appConfig, eventQueue):
             'name': 'error',
             'value': errMsg
         })
+        if isNetworkChanged:
+            restoreEthernetSettings(eth.ifaceName)
         return
     # log(vbuState)
+
+    # Restore ethernet settings
+    if isNetworkChanged:
+        restoreEthernetSettings(eth.ifaceName)
 
     # Pass parsed vbu state to UI
     eventQueue.put({
         'name': 'vbuState',
         'value': vbuState
     })
+
+def restoreEthernetSettings(ifaceName):
+    # netsh interface ip set address name="Ethernet" source=dhcp
+    exitCode = subprocess.call(['netsh', 'interface', 'ip', 'set', 'address',
+                            'name="{eth_name}"'.format(eth_name=ifaceName),
+                            'source=dhcp'],
+                            shell=True)
+    if exitCode != 0:
+        warn("restore Ethernet cmd returned {}".format(exitCode))
+    return exitCode
 
 def parseVbuStateFile(fileContent):
     """
