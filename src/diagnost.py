@@ -37,8 +37,19 @@ logWidget = None
 # startStopBtnText = None
 
 paramFrame = None
+retryBtn = None
 
 isStateReading = False
+
+
+def showRetryBtn():
+    def onRetryBtnClick():
+        run()
+
+    global retryBtn
+    retryBtn = Button(paramFrame, text="Повторить", command=onRetryBtnClick,
+                          font=PARAM_FONT_SIZE, width=12)
+    retryBtn.grid(row=0, column=2, sticky="ne")
 
 
 def main():
@@ -66,11 +77,7 @@ def main():
     # Create layout and widgets
     createLayoutAndWidgets(mainWnd)
 
-    # Read VBU State
-    startVbuRead(appConfig, eventQueue)
-    printLogMsg(u"Диагностика начата. Пожалуйста, подождите.", False)
-    global isStateReading
-    isStateReading = True
+    run()
 
     # Start GUI periodic check of input queue
     guiPeriodicCall()
@@ -83,6 +90,12 @@ def main():
 
     info("DONE")
 
+
+def run():
+    startVbuRead(appConfig, eventQueue)
+    printLogMsg(u"Диагностика начата. Пожалуйста, подождите.", False)
+    global isStateReading
+    isStateReading = True
 
 def onExit():
     stopMonitoring()
@@ -197,8 +210,12 @@ def processMsgsFromReader():
                     # Print log msg into the log widget
                     printLogMsg(u"новое значение параметра 2: {}".format(msgVal))
             elif msgName == 'error':
-                printLogMsg(msgVal)
-                stopMonitoring()
+                if (msgVal == 'EthernetNotConnected'):
+                    printLogMsg(u'Отсутствует подключение Ethernet. Пожалуйста, подключите соответствующий кабель к этому компьютеру и нажмите кнопку "Повторить".')
+                    showRetryBtn()
+                else:
+                    printLogMsg(msgVal)
+                    stopMonitoring()
             elif msgName == 'vbuState':
                 visualizeVbuState(msgVal)
         except:
@@ -212,19 +229,14 @@ def visualizeVbuState(state):
 
     printLogMsg(u"Диагностика успешно завершена.")
 
-    # Made the param frame's columns equal width
-    paramFrame.grid_columnconfigure(0, weight=1, uniform="params-grid")
-    paramFrame.grid_columnconfigure(1, weight=1, uniform="params-grid")
-    paramFrame.grid_columnconfigure(2, weight=1, uniform="params-grid")
-
     # Disp time period
     DT_FRMT = "%H:%M:%S %d.%m.%y"
-    timePeriodText = "Период времени: {start} - {end}".format(
+    timePeriodText = "Период: {start} - {end}".format(
         start=state.dtStart.strftime(DT_FRMT),
         end=state.dtFinish.strftime(DT_FRMT)
     )
     label = Label(paramFrame, text=timePeriodText, font=PARAM_FONT_SIZE)
-    label.grid(row=0, column=0, columnspan=3, sticky="nw")
+    label.grid(row=0, column=0, columnspan=2, sticky="nw")
 
     # Disp param table's header
     label = Label(paramFrame, text="Параметр", font=PARAM_TABLE_HDR_FONT)
@@ -315,6 +327,12 @@ def createLayoutAndWidgets(mainWnd):
     global paramFrame
     paramFrame = Frame(mainWnd, width=MAIN_WND_W)
     paramFrame.grid(row=0, column=0, sticky="ewns", padx=10, pady=10)
+
+    # Made the param frame's columns equal width
+    paramFrame.grid_columnconfigure(0, weight=1, uniform="params-grid")
+    paramFrame.grid_columnconfigure(1, weight=1, uniform="params-grid")
+    paramFrame.grid_columnconfigure(2, weight=1, uniform="params-grid")
+
     # paramFrame.grid_rowconfigure(0, weight=0)
     # paramFrame.grid_rowconfigure(1, weight=0)
     # paramFrame.grid_columnconfigure(0, weight=0)
@@ -370,15 +388,15 @@ def createLayoutAndWidgets(mainWnd):
     logWidget['yscrollcommand'] = logScrollBar.set
 
 
-def getParam2():
-    val = None
-    if param2StrVar:
-        val = float(param2StrVar.get())
-    return val
-
-def setParam2(val):
-    if param2StrVar:
-        param2StrVar.set(str(val))
+# def getParam2():
+#     val = None
+#     if param2StrVar:
+#         val = float(param2StrVar.get())
+#     return val
+#
+# def setParam2(val):
+#     if param2StrVar:
+#         param2StrVar.set(str(val))
 
 
 def printLogMsg(msg, endLine=True):

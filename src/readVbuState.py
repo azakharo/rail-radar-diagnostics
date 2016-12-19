@@ -5,8 +5,9 @@ import re
 from datetime import datetime
 from threading import Thread
 from VbuState import VbuState
-from mylogging import log, err
+from mylogging import log, info, err
 from scp import readFile
+from windows_networking import getEthernetInfo
 
 
 def startVbuRead(appCfg, uiEventQueue):
@@ -15,6 +16,16 @@ def startVbuRead(appCfg, uiEventQueue):
     vbuReaderThread.start()
 
 def readVbuState(appConfig, eventQueue):
+    # Check Ethernet connected
+    eth = getEthernetInfo()
+    if not eth.isConnected:
+        info("Ethernet NOT connected")
+        eventQueue.put({
+            'name': 'error',
+            'value': 'EthernetNotConnected'
+        })
+        return
+
     vbuStateFileCont = None
 
     try:
