@@ -201,6 +201,7 @@ def processMsgsFromReader():
             global isStateReading
             if isStateReading:
                 isStateReading = False
+                _writeLogMsg(u"\n")
 
             if msgName == 'param2':
                 prevVal = getParam2()
@@ -410,9 +411,10 @@ def printLogMsg(msg, endLine=True):
         logMsg = logMsg + u'\n'
     _writeLogMsg(logMsg)
 
-def _writeLogMsg(msg, toEnd=False):
+def _writeLogMsg(msg, toEnd=True):
     logWidget.configure(state="normal")
     logWidget.insert('end' if toEnd else '1.0', msg)
+    logWidget.see("end")
     logWidget.configure(state="disabled")
 
 
