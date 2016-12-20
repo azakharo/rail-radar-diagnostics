@@ -31,6 +31,14 @@ def getSubnet(ip):
 def readVbuState(appConfig, eventQueue):
     # Check Ethernet connected
     eth = getEthernetInfo()
+    if not eth:
+        errMsg = u"Ethernet adapter info has NOT been found in output of ipconfig."
+        err(errMsg)
+        eventQueue.put({
+            'name': 'error',
+            'value': errMsg
+        })
+        return
     if not eth.isConnected:
         info("Ethernet NOT connected")
         eventQueue.put({
