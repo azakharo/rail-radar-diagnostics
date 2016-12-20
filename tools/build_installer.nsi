@@ -50,7 +50,9 @@ Section "MainSection" SEC01
   File "..\.build\dist\diagnost.exe"
   CreateDirectory "$SMPROGRAMS\Rail Radar Diagnost"
   CreateShortCut "$SMPROGRAMS\Rail Radar Diagnost\Rail Radar Diagnost.lnk" "$INSTDIR\diagnost.exe"
+  ShellLink::SetRunAsAdministrator "$SMPROGRAMS\Rail Radar Diagnost\Rail Radar Diagnost.lnk"
   CreateShortCut "$DESKTOP\Rail Radar Diagnost.lnk" "$INSTDIR\diagnost.exe"
+  ShellLink::SetRunAsAdministrator "$DESKTOP\Rail Radar Diagnost.lnk"
   File "..\.build\dist\favicon.ico"
   File "..\.build\dist\diagnost.cfg"
 SectionEnd
