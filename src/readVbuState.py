@@ -13,6 +13,9 @@ from scp import readFile
 from windows_networking import getEthernetInfo
 
 
+VBU_LINE_DT_FRMT = "%d.%m.%y %H:%M:%S"
+
+
 def startVbuRead(appCfg, uiEventQueue):
     # Create and run the reader thread
     vbuReaderThread = Thread(target=readVbuState, kwargs={'appConfig': appCfg, 'eventQueue': uiEventQueue})
@@ -104,6 +107,13 @@ def readVbuState(appConfig, eventQueue):
         errMsg = u"Устройство необходимо заменить"
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
+    except NoFree, ex:
+        errMsg = u"За период {t1} - {t2} не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей.".format(
+            t1=ex.t1.strftime(VBU_LINE_DT_FRMT),
+            t2=ex.t2.strftime(VBU_LINE_DT_FRMT)
+        )
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
     except Exception:
         errMsg = u"Не удалось разобрать содержимое файла состояния"
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
@@ -135,7 +145,9 @@ class VbuEmpty(Exception):
     pass
 
 class NoFree(Exception):
-    pass
+    def __init__(self, t1, t2):
+        self.t1 = t1
+        self.t2 = t2
 
 class NoFreqs(Exception):
     pass
@@ -145,6 +157,7 @@ def parseVbuStateFile(fileContent):
     :param fileContent:
     :return: VbuState object or None
     """
+
     # Read lines
     lines = fileContent.split('\n')
     lines = [l.strip() for l in lines]
@@ -162,10 +175,46 @@ def parseVbuStateFile(fileContent):
             freeLine = l
             freeLineInd = i
             break
-    if not freeLine or freeLineInd == len(lines) - 1:
-        return None
-    # log(freeLine)
-    # log(freeLineInd)
+    if not freeLine:
+        # необходимо найти начальное время первой записи busy Т1 и конечное время последней записи "busy" Т2
+        # Get all busy lines
+        busyLines = [l for l in lines if l.startswith("busy")]
+        t1 = t2 = None
+        if len(busyLines) > 0:
+            BUSY_LINE_FRMT = "^busy\s+" \
+                             "(?P<dtStart>\d{2}\.\d{2}\.\d{2}\s+\d{2}:\d{2}:\d{2})\s+" \
+                             "-\s+" \
+                             "(?P<dtEnd>\d{2}\.\d{2}\.\d{2}\s+\d{2}:\d{2}:\d{2})\s+" \
+                            ".*" \
+                            "$"
+            # Get t1
+            l = busyLines[0]
+            # Parse the "busy" line
+            matchResult = re.match(BUSY_LINE_FRMT, l)
+            if not matchResult:
+                raise Exception("Couldn't parse 'busy' line '{}'".format(l))
+            try:
+                t1 = datetime.strptime(matchResult.group('dtStart'), VBU_LINE_DT_FRMT)
+            except Exception:
+                err("Couldn't parse 'busy' line '{}'".format(l))
+                raise
+
+            # Get t2
+            l = busyLines[-1]
+            # Parse the "busy" line
+            matchResult = re.match(BUSY_LINE_FRMT, l)
+            if not matchResult:
+                raise Exception("Couldn't parse 'busy' line '{}'".format(l))
+            try:
+                t2 = datetime.strptime(matchResult.group('dtEnd'), VBU_LINE_DT_FRMT)
+            except Exception:
+                err("Couldn't parse 'busy' line '{}'".format(l))
+                raise
+        # Raise exception
+        raise NoFree(t1, t2)
+
+    if freeLineInd == len(lines) - 1:
+        raise NoFreqs()
 
     # free 13.12.16 04:32:10 - 13.12.16 04:58:42  18001.9-19594.4  2018 2022 2027  1022 1146 1412  2646 2900 3030
     # free date_time_start - date_time_end        time_offset_start-time_offset_end
@@ -195,11 +244,10 @@ def parseVbuStateFile(fileContent):
                            "$", freeLine)
     if not matchResult:
         raise Exception("Couldn't parse 'free' line '{}'".format(freeLine))
-    DT_FRMT = "%d.%m.%y %H:%M:%S"
 
     try:
-        dtStart = datetime.strptime(matchResult.group('dtStart'), DT_FRMT)
-        dtEnd = datetime.strptime(matchResult.group('dtEnd'), DT_FRMT)
+        dtStart = datetime.strptime(matchResult.group('dtStart'), VBU_LINE_DT_FRMT)
+        dtEnd = datetime.strptime(matchResult.group('dtEnd'), VBU_LINE_DT_FRMT)
         minMean = float(matchResult.group('minMean'))
         meanMean = float(matchResult.group('meanMean'))
         maxMean = float(matchResult.group('maxMean'))
