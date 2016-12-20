@@ -10,7 +10,7 @@ from scpclient import SCPError
 from VbuState import VbuState
 from mylogging import log, info, warn, err, exception
 from scp import readFile
-from windows_networking import getEthernetInfo
+from windows_networking import getEthernetInfo, getWindowsCmdEncoding
 
 
 VBU_LINE_DT_FRMT = "%d.%m.%y %H:%M:%S"
@@ -53,16 +53,26 @@ def readVbuState(appConfig, eventQueue):
     if getSubnet(appConfig.host) != getSubnet(eth.ip):
         info("Need to change Ethernet settings")
         # netsh interface ip set address name="Ethernet" source=static addr=192.168.0.1 mask=255.255.255.0 gateway=none
-        exitCode = subprocess.call(['netsh', 'interface', 'ip', 'set', 'address',
-                                    'name="{eth_name}"'.format(eth_name=eth.ifaceName),
-                                    'source=static',
-                                    'addr={subnet}.1'.format(subnet=getSubnet(appConfig.host)),
-                                    'mask=255.255.255.0',
-                                    'gateway=none'],
-                                   shell=True)
+        winCmdEncoding = getWindowsCmdEncoding()
+        iface = eth.ifaceName.encode(winCmdEncoding)
+        netshArgs = ['netsh', 'interface', 'ip', 'set', 'address',
+                     'name="{eth_name}"'.format(eth_name=iface),
+                     'source=static',
+                     'addr={subnet}.1'.format(subnet=getSubnet(appConfig.host)),
+                     'mask=255.255.255.0',
+                     'gateway=none']
+        log(" ".join(netshArgs))
+        exitCode = subprocess.call(netshArgs, shell=True)
         if exitCode == 0:
             isNetworkChanged = True
-        # log(exitCode)
+        else:
+            errMsg = u"Не удалось изменить сетевые настройки. netsh вернула {exitCode}.".format(exitCode=exitCode)
+            err(errMsg)
+            eventQueue.put({
+                'name': 'error',
+                'value': errMsg
+            })
+            return
 
     # Ping the host
     exitCode = subprocess.call(['ping', '-n', '3', appConfig.host], shell=True)
