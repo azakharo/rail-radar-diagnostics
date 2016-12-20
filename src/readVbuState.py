@@ -114,6 +114,10 @@ def readVbuState(appConfig, eventQueue):
         )
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
+    except NoFreqs:
+        errMsg = u"Данное устройство не использует радиоканал. Диагностика закончена."
+        handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
+        return
     except Exception:
         errMsg = u"Не удалось разобрать содержимое файла состояния"
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
@@ -231,6 +235,8 @@ def parseVbuStateFile(fileContent):
             nextBusyLineInd = i
             break
     # log(nextBusyLineInd)
+    if nextBusyLineInd == freeLineInd + 1:
+        raise NoFreqs()
 
     # Parse the "free" line
     matchResult = re.match("^free\s+"
