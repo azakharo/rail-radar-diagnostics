@@ -75,7 +75,7 @@ def readVbuState(appConfig, eventQueue):
             return
 
     # Ping the host
-    exitCode = subprocess.call(['ping', '-n', '10', appConfig.host], shell=True)
+    exitCode = subprocess.call(['ping', '-n', '6', appConfig.host], shell=True)
     if exitCode != 0:
         info("Host {host} is inaccessible".format(host=appConfig.host))
         if isNetworkChanged:
@@ -113,8 +113,8 @@ def readVbuState(appConfig, eventQueue):
         errMsg = u"Возможно, запуск устройства был произведен менее часа назад. Необходимо повторить диагностику по истечении одного часа после запуска. Если сообщение повторится, то устройство необходимо заменить."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
-    except Exception, ex:
-        errMsg = unicode(ex)
+    except:
+        errMsg = u"Неизвестная ошибка чтения файла по SCP"
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
 
@@ -167,7 +167,8 @@ class VbuEmpty(Exception):
     pass
 
 class NoFree(Exception):
-    def __init__(self, t1, t2):
+    def __init__(self, message, t1, t2):
+        self.message = message
         self.t1 = t1
         self.t2 = t2
 
@@ -186,7 +187,7 @@ def parseVbuStateFile(fileContent):
     lines = [l for l in lines if len(l) > 0]
     # log(len(lines))
     if len(lines) == 0:
-        raise VbuEmpty()
+        raise VbuEmpty(u"vbu state file is empty")
 
     # Find the last "free" line
     freeLine = None
@@ -233,10 +234,10 @@ def parseVbuStateFile(fileContent):
                 err("Couldn't parse 'busy' line '{}'".format(l))
                 raise
         # Raise exception
-        raise NoFree(t1, t2)
+        raise NoFree(u"there are no 'free' lines", t1, t2)
 
     if freeLineInd == len(lines) - 1:
-        raise NoFreqs()
+        raise NoFreqs(u"line 'free' is last in the file")
 
     # free 13.12.16 04:32:10 - 13.12.16 04:58:42  18001.9-19594.4  2018 2022 2027  1022 1146 1412  2646 2900 3030
     # free date_time_start - date_time_end        time_offset_start-time_offset_end
@@ -254,7 +255,7 @@ def parseVbuStateFile(fileContent):
             break
     # log(nextBusyLineInd)
     if nextBusyLineInd == freeLineInd + 1:
-        raise NoFreqs()
+        raise NoFreqs(u"there are no 'freq' lines after 'free'")
 
     # Parse the "free" line
     matchResult = re.match("^free\s+"
