@@ -17,10 +17,13 @@ class EthernetInfo(object):
 def getEthernetInfo():
     # Call ipconfig /all
     ipconfigOut = subprocess.check_output(['ipconfig', '/all'])
+    winEncoding = getWindowsCmdEncoding()
+    ipconfigOut = unicode(ipconfigOut, encoding=winEncoding)
     # log(ipconfigOut)
     lines = ipconfigOut.split('\n')
     lines = [l.strip() for l in lines]
     lines = [l for l in lines if len(l) > 0]
+
 
     # Get adapter lines
     adapterLines = findAdapterLines(lines)
@@ -41,7 +44,7 @@ def getEthernetInfo():
     # Media State . . . . . . . . . . . : Media disconnected
     isDisconnected = False
     for lineInd in xrange(lineIndStart, lineIndEnd + 1):
-        matchResult = re.match("^Media State.*:\s+Media disconnected$", lines[lineInd])
+        matchResult = re.match(u"^Media State.*:\s+Media disconnected$", lines[lineInd])
         if matchResult:
             isDisconnected = True
             break
@@ -49,7 +52,7 @@ def getEthernetInfo():
     if not isDisconnected:
         # Find address
         for lineInd in xrange(lineIndStart, lineIndEnd + 1):
-            matchResult = re.match("^.*IPv4\s+Address.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
+            matchResult = re.match(u"^.*IPv4\s+Address.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
             if matchResult:
                 ipAddr = matchResult.group('ip')
                 break
@@ -72,7 +75,7 @@ def findAdapterLines(lines):
         # Find interface section start
         # Example:
         # Wireless LAN adapter Wi-Fi:
-        matchResult = re.match("^.*adapter\s+(?P<ifaceName>.*):$", line)
+        matchResult = re.match(u"^.*(adapter|адаптер)\s+(?P<ifaceName>.*):$", line)
         if matchResult:
             ifaceName = matchResult.group('ifaceName')
             adaptLine = AdapterLine(ifaceName, line, lineInd)
@@ -85,29 +88,31 @@ def findEthernetAdapterLine(adapterLines):
     if not adapterLines:
         return None
 
-    lines = [l for l in adapterLines if l.ifaceName == 'Ethernet']
+    lines = [l for l in adapterLines if l.ifaceName == u'Ethernet']
     if lines:
         return lines[0]
 
-    lines = [l for l in adapterLines if 'Local Area Connection' in l.ifaceName]
+    lines = [l for l in adapterLines if u'Local Area Connection' in l.ifaceName]
     if lines:
         return lines[0]
 
-    lines = [l for l in adapterLines if l.ifaceName == 'Local']
+    lines = [l for l in adapterLines if l.ifaceName == u'Local']
     if lines:
         return lines[0]
 
-    # Get windows console encoding
-    chcpOut = subprocess.check_output(['chcp'], shell=True)
-    matchResult = re.match("^Active code page:\s+(?P<codePage>.*)$", chcpOut)
-    winCodePage = matchResult.group('codePage')
 
-    lines = [l for l in adapterLines if u'Подключение по локальной сети' in
-             unicode(ifaceName, encoding="cp" + winCodePage)]
+    lines = [l for l in adapterLines if u'Подключение по локальной сети' in l.ifaceName]
     if lines:
         return lines[0]
 
     return None
+
+def getWindowsCmdEncoding():
+    # Get windows console encoding
+    chcpOut = subprocess.check_output(['chcp'], shell=True)
+    matchResult = re.match("^Active code page:\s+(?P<codePage>.*)$", chcpOut)
+    winCodePage = matchResult.group('codePage')
+    return "cp" + winCodePage
 
 
 if __name__ == '__main__':
