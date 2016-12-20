@@ -75,7 +75,7 @@ def findAdapterLines(lines):
         # Find interface section start
         # Example:
         # Wireless LAN adapter Wi-Fi:
-        matchResult = re.match(u"^.*(adapter|адаптер)\s+(?P<ifaceName>.*):$", line)
+        matchResult = re.match(u"^.*(adapter|адаптер).*\s+(?P<ifaceName>.*):$", line, re.IGNORECASE)
         if matchResult:
             ifaceName = matchResult.group('ifaceName')
             adaptLine = AdapterLine(ifaceName, line, lineInd)
