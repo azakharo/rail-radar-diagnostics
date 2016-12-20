@@ -17,13 +17,15 @@ class EthernetInfo(object):
 def getEthernetInfo():
     # Call ipconfig /all
     ipconfigOut = subprocess.check_output(['ipconfig', '/all'])
+    return parseIpconfigOutput(ipconfigOut)
+
+def parseIpconfigOutput(ipconfigOut):
     winEncoding = getWindowsCmdEncoding()
     ipconfigOut = unicode(ipconfigOut, encoding=winEncoding)
     # log(ipconfigOut)
     lines = ipconfigOut.split('\n')
     lines = [l.strip() for l in lines]
     lines = [l for l in lines if len(l) > 0]
-
 
     # Get adapter lines
     adapterLines = findAdapterLines(lines)
@@ -48,11 +50,15 @@ def getEthernetInfo():
         if matchResult:
             isDisconnected = True
             break
+        matchResult = re.match(u"^Состояние среды.*:\s+Среда передачи недоступна.*$", lines[lineInd])
+        if matchResult:
+            isDisconnected = True
+            break
     ipAddr = None
     if not isDisconnected:
         # Find address
         for lineInd in xrange(lineIndStart, lineIndEnd + 1):
-            matchResult = re.match(u"^.*IPv4\s+Address.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
+            matchResult = re.match(u"^.*IPv4.*:\s+(?P<ip>\d+\.\d+\.\d+\.\d+).*$", lines[lineInd])
             if matchResult:
                 ipAddr = matchResult.group('ip')
                 break
@@ -75,7 +81,7 @@ def findAdapterLines(lines):
         # Find interface section start
         # Example:
         # Wireless LAN adapter Wi-Fi:
-        matchResult = re.match(u"^.*(adapter|адаптер).*\s+(?P<ifaceName>.*):$", line, re.IGNORECASE)
+        matchResult = re.match(u"^.*(adapter|адаптер|Адаптер).*\s+(?P<ifaceName>.*):$", line, re.IGNORECASE)
         if matchResult:
             ifaceName = matchResult.group('ifaceName')
             adaptLine = AdapterLine(ifaceName, line, lineInd)
