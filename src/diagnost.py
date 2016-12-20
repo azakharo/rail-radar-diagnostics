@@ -9,6 +9,7 @@ from Queue import Queue
 from time import sleep
 from glob import glob
 from os import getcwd
+import ctypes
 import attr
 from mylogging import log, info, err, warn
 from appConfig import AppConfig
@@ -67,13 +68,16 @@ def main():
     # Create layout and widgets
     createLayoutAndWidgets(mainWnd)
 
-    run()
+    if not ctypes.windll.shell32.IsUserAnAdmin():
+        printLogMsg(u"Данное приложение должно быть запущено под учётной записью Администратора.")
+    else:
+        run()
 
-    # Start GUI periodic check of input queue
-    guiPeriodicCall()
+        # Start GUI periodic check of input queue
+        guiPeriodicCall()
 
-    # Gracefully stop mon on exit
-    mainWnd.wm_protocol("WM_DELETE_WINDOW", onExit)
+        # Gracefully stop mon on exit
+        mainWnd.wm_protocol("WM_DELETE_WINDOW", onExit)
 
     # Start GUI event loop
     mainWnd.mainloop()
