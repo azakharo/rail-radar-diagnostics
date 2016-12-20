@@ -75,7 +75,7 @@ def readVbuState(appConfig, eventQueue):
             return
 
     # Ping the host
-    exitCode = subprocess.call(['ping', '-n', '3', appConfig.host], shell=True)
+    exitCode = subprocess.call(['ping', '-n', '10', appConfig.host], shell=True)
     if exitCode != 0:
         info("Host {host} is inaccessible".format(host=appConfig.host))
         if isNetworkChanged:
