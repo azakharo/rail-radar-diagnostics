@@ -110,7 +110,7 @@ def findEthernetAdapterLine(adapterLines):
 def getWindowsCmdEncoding():
     # Get windows console encoding
     chcpOut = subprocess.check_output(['chcp'], shell=True)
-    matchResult = re.match("^Active code page:\s+(?P<codePage>.*)$", chcpOut)
+    matchResult = re.match("^.*:\s+(?P<codePage>.*)$", chcpOut)
     winCodePage = matchResult.group('codePage')
     return "cp" + winCodePage
 
