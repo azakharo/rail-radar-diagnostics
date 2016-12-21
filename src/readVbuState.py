@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from threading import Thread
 import subprocess
+from time import sleep
 from paramiko.ssh_exception import AuthenticationException, NoValidConnectionsError
 from scpclient import SCPError
 from VbuState import VbuState
@@ -65,6 +66,7 @@ def readVbuState(appConfig, eventQueue):
         exitCode = subprocess.call(netshArgs, shell=True)
         if exitCode == 0:
             isNetworkChanged = True
+            sleep(4)
         else:
             errMsg = u"Не удалось изменить сетевые настройки. netsh вернула {exitCode}.".format(exitCode=exitCode)
             err(errMsg)
@@ -73,18 +75,6 @@ def readVbuState(appConfig, eventQueue):
                 'value': errMsg
             })
             return
-
-    # Ping the host
-    exitCode = subprocess.call(['ping', '-n', '6', appConfig.host], shell=True)
-    if exitCode != 0:
-        info("Host {host} is inaccessible".format(host=appConfig.host))
-        if isNetworkChanged:
-            restoreEthernetSettings(eth.ifaceName)
-        eventQueue.put({
-            'name': 'error',
-            'value': 'HostInaccessible'
-        })
-        return
 
     # Just common code to avoid code dupl
     def handleException(errMsg, isNetworkChanged, ifaceName, eventQueue):
