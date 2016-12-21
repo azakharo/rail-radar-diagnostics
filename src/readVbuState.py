@@ -30,7 +30,7 @@ def getSubnet(ip):
     return subnet
 
 def readVbuState(appConfig, eventQueue):
-    # Check Ethernet connected
+    info('Get Ethernet adapter name and connection status')
     eth = getEthernetInfo()
     if not eth:
         errMsg = u"Ethernet adapter info has NOT been found in output of ipconfig."
@@ -87,6 +87,7 @@ def readVbuState(appConfig, eventQueue):
         })
 
     # Read VBU state file content
+    info("Reading VBU state file...")
     vbuStateFileCont = None
     try:
         vbuStateFileCont = readFile(appConfig.statePath, appConfig.host, appConfig.port,
@@ -103,12 +104,14 @@ def readVbuState(appConfig, eventQueue):
         errMsg = u"Возможно, запуск устройства был произведен менее часа назад. Необходимо повторить диагностику по истечении одного часа после запуска. Если сообщение повторится, то устройство необходимо заменить."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
-    except:
-        errMsg = u"Неизвестная ошибка чтения файла по SCP"
+    except Exception, ex:
+        errMsg = u"SSH: не удалось подключиться к '{host}:{port}' и прочитать файл '{file}'\n{exc}".format(
+            host=appConfig.host, port=appConfig.port, file=appConfig.statePath, exc=unicode(ex))
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
 
     # Parse vbu state file
+    info("Parsing VBU state file...")
     try:
         vbuState = parseVbuStateFile(vbuStateFileCont)
     except VbuEmpty:
