@@ -223,7 +223,7 @@ def processMsgsFromReader():
 
 def visualizeVbuState(state):
     if state == None:
-        printLogMsg(u"В данной конфигурации радиоканал не используется. Диагностика закончена.")
+        printLogMsg(u"Диагностика завершена: в данной конфигурации радиоканал не используется.")
         return
 
     printLogMsg(u"Диагностика успешно завершена.")

@@ -115,22 +115,22 @@ def readVbuState(appConfig, eventQueue):
     try:
         vbuState = parseVbuStateFile(vbuStateFileCont)
     except VbuEmpty:
-        errMsg = u"Устройство необходимо заменить"
+        errMsg = u"Диагностика завершена: устройство необходимо заменить."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     except NoFree, ex:
-        errMsg = u"За период {t1} - {t2} не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей.".format(
+        errMsg = u"Диагностика завершена: за период {t1} - {t2} не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей.".format(
             t1=ex.t1.strftime(VBU_LINE_DT_FRMT),
             t2=ex.t2.strftime(VBU_LINE_DT_FRMT)
         )
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     except NoFreqs:
-        errMsg = u"Данное устройство не использует радиоканал. Диагностика закончена."
+        errMsg = u"Диагностика завершена: данное устройство не использует радиоканал."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     except Exception:
-        errMsg = u"Не удалось разобрать содержимое файла состояния"
+        errMsg = u"ОШИБКА! Не удалось разобрать содержимое файла состояния."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     # log(vbuState)
