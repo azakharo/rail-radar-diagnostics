@@ -213,7 +213,7 @@ def processMsgsFromReader():
                     showRetryBtn()
                 else:
                     printLogMsg(msgVal)
-                    printLogMsg("Диагностика завершена.")
+                    printLogMsg(u"Диагностика завершена.")
                     stopMonitoring()
             elif msgName == 'vbuState':
                 hideRetryBtn()
