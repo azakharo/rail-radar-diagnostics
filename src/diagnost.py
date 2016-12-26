@@ -213,6 +213,7 @@ def processMsgsFromReader():
                     showRetryBtn()
                 else:
                     printLogMsg(msgVal)
+                    printLogMsg("Диагностика завершена.")
                     stopMonitoring()
             elif msgName == 'vbuState':
                 hideRetryBtn()
@@ -223,10 +224,9 @@ def processMsgsFromReader():
 
 def visualizeVbuState(state):
     if state == None:
-        printLogMsg(u"Диагностика завершена: в данной конфигурации радиоканал не используется.")
+        printLogMsg(u"В данной конфигурации радиоканал не используется.")
+        printLogMsg(u"Диагностика завершена.")
         return
-
-    printLogMsg(u"Диагностика успешно завершена.")
 
     # Disp time period
     DT_FRMT = "%H:%M:%S %d.%m.%y"
@@ -248,6 +248,22 @@ def visualizeVbuState(state):
     # Disp params
     descrs = createParamWidgetDescs(state)
     createParamWidgets(descrs)
+
+    if isWithin(state.signalMin, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX) and \
+            isWithin(state.signalMean, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX) and \
+            isWithin(state.signalMax, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX):
+        printLogMsg(u"Параметры устройства в норме.")
+    else:
+        printLogMsg(u"Необходимо проверить радио тракт.")
+    printLogMsg(u"Диагностика завершена.")
+
+
+def isWithin(val, minVal, maxVal):
+    if val:
+        return val >= minVal and val <= maxVal
+    else:
+        return False
+
 
 @attr.s
 class ParamWidgetDesc(object):
