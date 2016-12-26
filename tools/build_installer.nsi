@@ -33,7 +33,7 @@ Unicode true
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Language files
-!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Russian"
 
 ; MUI end ------
 
