@@ -309,12 +309,12 @@ def createParamWidgets(widgetDescriptions):
                 fg = 'firebrick'
             value.configure(foreground=fg)
             # Output the limits
-            limits = Label(paramFrame, text='[{min:5.2f}, {max:5.2f}]'.format(min=desc.min, max=desc.max),
+            limits = Label(paramFrame, text='[{min:6.3f}, {max:6.3f}]'.format(min=desc.min, max=desc.max),
                            font=PARAM_FONT_SIZE)
             limits.grid(row=descInd + firstRowInd, column=2, sticky="ne")
 
 def formatFloat(val):
-    return "{:9.6f}".format(val)
+    return "{:9.3f}".format(val)
 
 def createLayoutAndWidgets(mainWnd):
     mainWnd.grid_columnconfigure(0, weight=1, uniform="fred")
