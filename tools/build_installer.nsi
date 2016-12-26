@@ -26,7 +26,6 @@
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\srpps_test.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
