@@ -13,7 +13,7 @@ sys.path.append(SRC_ROOT)
 from mylogging import info, err
 
 DIST_DIR = '../.build/dist'
-EXE_FNAME = 'diagnost.exe'
+EXE_FNAME = 'srpps_test.exe'
 SETUP_EXE_FNAME = 'srpps_test_setup.exe'
 FILES2COPY = [
     '../src/favicon.ico',
