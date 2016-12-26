@@ -58,7 +58,7 @@ def main():
     # Create main window
     global mainWnd
     mainWnd = Tk()
-    mainWnd.title("Диагностика")
+    mainWnd.title("Программа диагностики СРППС, версия 2.3")
     mainWnd.resizable(width=False, height=False)
     left = (mainWnd.winfo_screenwidth() - MAIN_WND_W) / 2
     top = (mainWnd.winfo_screenheight() - MAIN_WND_H) / 2
