@@ -51,7 +51,7 @@ def readVbuState(appConfig, eventQueue):
 
     # Check whether network conf is needed and perform it
     isNetworkChanged = False
-    if getSubnet(appConfig.host) == getSubnet(eth.ip):
+    if getSubnet(appConfig.host) != getSubnet(eth.ip):
         info("Need to change Ethernet settings")
         # netsh interface ip set address name="Ethernet" source=static addr=192.168.0.1 mask=255.255.255.0 gateway=none
         winCmdEncoding = getWindowsCmdEncoding()
