@@ -38,7 +38,7 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "..\.build\dist\DiagnostSetup.exe"
+OutFile "..\.build\dist\srpps_test_setup.exe"
 InstallDir "$PROGRAMFILES\Rail Radar Diagnost"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
