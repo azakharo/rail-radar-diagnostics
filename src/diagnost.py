@@ -281,10 +281,10 @@ def createParamWidgetDescs(vbuState):
     infos.append(info)
 
     # Frequencies
-    for frInd, fr in enumerate(vbuState.frequencies):
-        info = LimitedParamWidgetDesc("Сред. уровень частоты {}".format(frInd + 1), fr,
-                               VbuState.FREQ_MIN, VbuState.FREQ_MAX)
-        infos.append(info)
+    # for frInd, fr in enumerate(vbuState.frequencies):
+    #     info = LimitedParamWidgetDesc("Сред. уровень частоты {}".format(frInd + 1), fr,
+    #                            VbuState.FREQ_MIN, VbuState.FREQ_MAX)
+    #     infos.append(info)
 
     return infos
 
