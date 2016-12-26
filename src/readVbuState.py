@@ -119,10 +119,13 @@ def readVbuState(appConfig, eventQueue):
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     except NoFree, ex:
-        errMsg = u"Диагностика завершена: за период {t1} - {t2} не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей.".format(
-            t1=ex.t1.strftime(VBU_LINE_DT_FRMT),
-            t2=ex.t2.strftime(VBU_LINE_DT_FRMT)
-        )
+        if ex.t1 or ex.t2:
+            t1 = ex.t1.strftime(VBU_LINE_DT_FRMT) if ex.t1 else u"?"
+            t2 = ex.t2.strftime(VBU_LINE_DT_FRMT) if ex.t2 else u"?"
+            errMsg = u"Диагностика завершена: за период {t1} - {t2} не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей.".format(
+                t1=t1, t2=t2)
+        else:
+            errMsg = u"Диагностика завершена: не было полного освобождения всех рельсовых цепей. Повторите диагностику не ранее одного часа после момента освобождения всех рельсовых цепей."
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     except NoFreqs:
@@ -134,6 +137,7 @@ def readVbuState(appConfig, eventQueue):
         handleException(errMsg, isNetworkChanged, eth.ifaceName, eventQueue)
         return
     # log(vbuState)
+    info("Parsing finished")
 
     # Restore ethernet settings
     if isNetworkChanged:
