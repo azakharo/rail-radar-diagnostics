@@ -1,2 +1,3 @@
-* production: logging to file.
-* tkinter intercept exceptions in UI thread.
+* windowed + logging to file.
+* installer, shortcut, run as admin.
+* tkinter intercept exceptions in UI thread. Issue?
