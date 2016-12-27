@@ -3,7 +3,7 @@
 ; HM NIS Edit Wizard helper defines
 Unicode true
 !define PRODUCT_NAME "СРППС тест"
-!define PRODUCT_VERSION "1.0"
+!define PRODUCT_VERSION "2.3"
 !define PRODUCT_PUBLISHER "ITC Sistema-Sarov"
 !define PRODUCT_WEB_SITE "http://sarov-itc.ru/"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\srpps_test.exe"
