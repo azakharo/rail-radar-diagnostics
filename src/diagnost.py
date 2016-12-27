@@ -250,8 +250,8 @@ def visualizeVbuState(state):
     createParamWidgets(descrs)
 
     if isWithin(state.signalMin, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX) and \
-            isWithin(state.signalMean, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX) and \
-            isWithin(state.signalMax, VbuState.SGNL_MIN__MIN, VbuState.SGNL_MIN__MAX):
+            isWithin(state.signalMean, VbuState.SGNL_MEAN__MIN, VbuState.SGNL_MEAN__MAX) and \
+            isWithin(state.signalMax, VbuState.SGNL_MAX__MIN, VbuState.SGNL_MAX__MAX):
         printLogMsg(u"Параметры устройства в норме.")
     else:
         printLogMsg(u"Необходимо проверить радио тракт.")
