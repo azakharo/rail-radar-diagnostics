@@ -2,10 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 
 
 FORMAT = '%(message)s'
-logging.basicConfig(filename='diagnost.log', format=FORMAT)
+if os.environ.get('DIAGNOST_DEBUG'):
+    logging.basicConfig(format=FORMAT)
+else:
+    logging.basicConfig(filename='diagnost.log', format=FORMAT)
 _logger = logging.getLogger()
 _logger.setLevel(logging.DEBUG)
 
