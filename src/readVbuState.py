@@ -8,6 +8,7 @@ import subprocess
 from time import sleep
 from paramiko.ssh_exception import AuthenticationException, NoValidConnectionsError
 from scpclient import SCPError
+from pyinstaller_fix import subprocess_args
 from VbuState import VbuState
 from mylogging import log, info, warn, err, exception
 from scp import readFile
@@ -63,7 +64,7 @@ def readVbuState(appConfig, eventQueue):
                      'mask=255.255.255.0',
                      'gateway=none']
         log(" ".join(netshArgs))
-        exitCode = subprocess.call(netshArgs, shell=True)
+        exitCode = subprocess.call(netshArgs, shell=True, **subprocess_args())
         if exitCode == 0:
             isNetworkChanged = True
             sleep(4)
@@ -154,7 +155,7 @@ def restoreEthernetSettings(ifaceName):
     exitCode = subprocess.call(['netsh', 'interface', 'ip', 'set', 'address',
                             'name="{eth_name}"'.format(eth_name=ifaceName),
                             'source=dhcp'],
-                            shell=True)
+                            shell=True, **subprocess_args())
     if exitCode != 0:
         warn("restore Ethernet cmd returned {}".format(exitCode))
     return exitCode

@@ -5,7 +5,7 @@ import logging
 
 
 FORMAT = '%(message)s'
-logging.basicConfig(format=FORMAT)
+logging.basicConfig(filename='diagnost.log', format=FORMAT)
 _logger = logging.getLogger()
 _logger.setLevel(logging.DEBUG)
 

@@ -4,6 +4,7 @@
 import subprocess
 import re
 import attr
+from pyinstaller_fix import subprocess_args
 from mylogging import log
 
 
@@ -16,7 +17,7 @@ class EthernetInfo(object):
 
 def getEthernetInfo():
     # Call ipconfig /all
-    ipconfigOut = subprocess.check_output(['ipconfig', '/all'])
+    ipconfigOut = subprocess.check_output(['ipconfig', '/all'], **subprocess_args(False))
     return parseIpconfigOutput(ipconfigOut)
 
 def parseIpconfigOutput(ipconfigOut):
@@ -115,7 +116,7 @@ def findEthernetAdapterLine(adapterLines):
 
 def getWindowsCmdEncoding():
     # Get windows console encoding
-    chcpOut = subprocess.check_output(['chcp'], shell=True)
+    chcpOut = subprocess.check_output(['chcp'], shell=True, **subprocess_args(False))
     matchResult = re.match("^.*:\s+(?P<codePage>.*)$", chcpOut)
     winCodePage = matchResult.group('codePage')
     return "cp" + winCodePage
