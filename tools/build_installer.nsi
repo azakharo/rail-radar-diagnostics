@@ -91,6 +91,7 @@ Section Uninstall
   Delete "$INSTDIR\diagnost.cfg"
   Delete "$INSTDIR\favicon.ico"
   Delete "$INSTDIR\srpps_test.exe"
+  Delete "$INSTDIR\diagnost.log"
 
   Delete "$SMPROGRAMS\СРППС тест\Uninstall.lnk"
   Delete "$SMPROGRAMS\СРППС тест\Website.lnk"

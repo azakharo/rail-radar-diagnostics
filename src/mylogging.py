@@ -5,11 +5,10 @@ import logging
 import os
 
 
-FORMAT = '%(message)s'
 if os.environ.get('DIAGNOST_DEBUG'):
-    logging.basicConfig(format=FORMAT)
+    logging.basicConfig(format='%(message)s')
 else:
-    logging.basicConfig(filename='diagnost.log', format=FORMAT)
+    logging.basicConfig(filename='diagnost.log', format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 _logger = logging.getLogger()
 _logger.setLevel(logging.DEBUG)
 
